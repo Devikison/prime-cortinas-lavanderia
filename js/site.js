@@ -83,22 +83,45 @@
       }
     }
 
-    // ---- Carrossel de portfólio (toque/arrastar nativo + setas no desktop) ----
-    var pfTrack = document.getElementById('pf-track');
-    var pfPrev = document.getElementById('pf-prev');
-    var pfNext = document.getElementById('pf-next');
-    if (pfTrack && (pfPrev || pfNext)) {
-      var pfStep = function () {
-        var card = pfTrack.querySelector('.pf-card');
-        var gap = 20;
-        return card ? card.getBoundingClientRect().width + gap : 320;
-      };
-      if (pfPrev) pfPrev.addEventListener('click', function () {
-        pfTrack.scrollBy({ left: -pfStep(), behavior: 'smooth' });
+    // ---- Portfólio: carrossel infinito (100% CSS, sem JS) ----
+
+    // ---- Depoimentos: pager de 3 em 3, com setas e indicadores ----
+    var testiTrack = document.getElementById('testi-track');
+    if (testiTrack) {
+      var testiCards = Array.prototype.slice.call(testiTrack.querySelectorAll('.testi-card'));
+      var testiPrev = document.getElementById('testi-prev');
+      var testiNext = document.getElementById('testi-next');
+      var testiDotsWrap = document.getElementById('testi-dots');
+      var PAGE_SIZE = 3;
+      var pageCount = Math.max(1, Math.ceil(testiCards.length / PAGE_SIZE));
+      var page = 0;
+
+      var dots = [];
+      if (testiDotsWrap && pageCount > 1) {
+        for (var d = 0; d < pageCount; d++) {
+          var dot = document.createElement('span');
+          testiDotsWrap.appendChild(dot);
+          dots.push(dot);
+        }
+      }
+
+      function renderTesti() {
+        testiCards.forEach(function (card, i) {
+          card.classList.toggle('is-active', i >= page * PAGE_SIZE && i < (page + 1) * PAGE_SIZE);
+        });
+        dots.forEach(function (dot, i) { dot.classList.toggle('is-active', i === page); });
+        if (testiPrev) testiPrev.disabled = page === 0;
+        if (testiNext) testiNext.disabled = page === pageCount - 1;
+        if (testiPrev) testiPrev.style.display = pageCount > 1 ? '' : 'none';
+        if (testiNext) testiNext.style.display = pageCount > 1 ? '' : 'none';
+      }
+      if (testiPrev) testiPrev.addEventListener('click', function () {
+        if (page > 0) { page--; renderTesti(); }
       });
-      if (pfNext) pfNext.addEventListener('click', function () {
-        pfTrack.scrollBy({ left: pfStep(), behavior: 'smooth' });
+      if (testiNext) testiNext.addEventListener('click', function () {
+        if (page < pageCount - 1) { page++; renderTesti(); }
       });
+      renderTesti();
     }
 
     // ---- Barra de consentimento de cookies ----
