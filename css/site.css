@@ -209,8 +209,15 @@ summary::-webkit-details-marker { display: none; }
 /* Barra de acento no topo do card — dá presença de cor sem pesar */
 .pc-card-accent { border-top: 3px solid var(--gold); }
 
-/* Linha conectora sutil entre os passos do "Como funciona" (desktop) */
-.pc-steps { position: relative; }
+/* "Como funciona" — grade de 5 colunas com linha conectora no desktop;
+   vira uma linha do tempo vertical no mobile (mesma linguagem visual da
+   régua dourada de "O problema") em vez de embolar em 2+2+1. */
+.pc-steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: clamp(16px, 2vw, 24px);
+}
 .pc-steps::before {
   content: "";
   position: absolute;
@@ -220,8 +227,35 @@ summary::-webkit-details-marker { display: none; }
   height: 1px;
   background: linear-gradient(90deg, rgba(180,149,94,0), rgba(180,149,94,.55) 12%, rgba(180,149,94,.55) 88%, rgba(180,149,94,0));
 }
+.step-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
+
 @media (max-width: 760px) {
-  .pc-steps::before { display: none; }
+  .pc-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 440px;
+  }
+  .pc-steps::before {
+    /* Passa exatamente pelo centro dos círculos de 40px (20px - metade
+       da linha de 2px de largura). */
+    left: 19px;
+    right: auto;
+    top: 6px;
+    bottom: 6px;
+    width: 2px;
+    height: auto;
+    background: linear-gradient(180deg, var(--gold), rgba(180,149,94,.15));
+  }
+  .step-item {
+    flex-direction: row;
+    align-items: flex-start;
+    text-align: left;
+    gap: 16px;
+    padding-bottom: clamp(20px, 5vw, 28px);
+  }
+  .step-item:last-child { padding-bottom: 0; }
+  .step-item .pc-card { text-align: left; }
 }
 
 /* Molduras de imagem com profundidade (hero, fechamento) */
