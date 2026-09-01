@@ -154,39 +154,94 @@ details[open] .faq-plus { transform: rotate(45deg); }
   box-shadow: 0 40px 80px -32px rgba(27,48,79,.32);
 }
 
-/* Botões e links com hover — motion lento e com elevação */
-.btn-primary { transition: background var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux); }
-.btn-primary:hover { background: #142540; transform: translateY(-3px); box-shadow: 0 20px 36px -14px rgba(27,48,79,.4); }
+/* Botões e links com hover — motion lento e com elevação, com um leve
+   relevo 3D (brilho no topo + sombra interna na base) que dá o toque
+   luxuoso sem alterar as cores de fundo definidas inline. */
+.btn-primary, .btn-dark, .btn-footer, .btn-outline, .btn-cookie-allow, .btn-cookie-deny, #wa-fab {
+  position: relative;
+  isolation: isolate;
+}
+.btn-primary::before, .btn-dark::before, .btn-footer::before, .btn-outline::before,
+.btn-cookie-allow::before, .btn-cookie-deny::before, #wa-fab::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* z-index negativo: fica acima do fundo do próprio botão (que pinta no
+     nível mais baixo da stacking context) mas abaixo do texto/ícone, que
+     são conteúdo inline normal — assim o brilho nunca encobre o conteúdo. */
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,.32), rgba(255,255,255,0) 48%, rgba(0,0,0,.05) 100%);
+  pointer-events: none;
+  transition: opacity var(--dur-med) var(--ease-lux);
+}
 
-.btn-dark { transition: background-color var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux); }
-.btn-dark:hover { background: #142540; box-shadow: 0 14px 26px -12px rgba(27,48,79,.4); }
+.btn-primary {
+  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 4px rgba(0,0,0,.12) inset, 0 12px 26px -10px rgba(27,48,79,.45);
+  transition: background var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+}
+.btn-primary:hover { background: #142540; transform: translateY(-4px); box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 -2px 4px rgba(0,0,0,.14) inset, 0 26px 44px -16px rgba(27,48,79,.5); }
+.btn-primary:active { transform: translateY(-1px); box-shadow: 0 1px 0 rgba(255,255,255,.2) inset, 0 -1px 2px rgba(0,0,0,.16) inset, 0 8px 16px -8px rgba(27,48,79,.4); }
 
-.btn-footer { transition: transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux); }
-.btn-footer:hover { transform: translateY(-3px); box-shadow: 0 24px 44px -16px rgba(0,0,0,.4); }
+.btn-dark {
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 -2px 4px rgba(0,0,0,.15) inset, 0 10px 20px -10px rgba(27,48,79,.4);
+  transition: background-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+}
+.btn-dark:hover { background: #142540; transform: translateY(-3px); box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 4px rgba(0,0,0,.16) inset, 0 18px 30px -12px rgba(27,48,79,.45); }
+.btn-dark:active { transform: translateY(0); }
 
-.btn-outline { transition: border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux); }
-.btn-outline:hover { border-color: #B4955E; transform: translateY(-2px); box-shadow: 0 14px 28px -14px rgba(27,48,79,.2); }
+.btn-footer {
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 -2px 3px rgba(20,37,64,.08) inset, 0 14px 28px -14px rgba(0,0,0,.35);
+  transition: transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+}
+.btn-footer:hover { transform: translateY(-4px); box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 -2px 3px rgba(20,37,64,.1) inset, 0 28px 48px -16px rgba(0,0,0,.42); }
+.btn-footer:active { transform: translateY(-1px); }
+
+.btn-outline {
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 4px 10px -6px rgba(27,48,79,.12);
+  transition: border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+}
+.btn-outline:hover { border-color: #B4955E; transform: translateY(-3px); box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 18px 32px -16px rgba(27,48,79,.24); }
 
 .btn-cookie-deny { transition: border-color var(--dur-med) var(--ease-lux); }
 .btn-cookie-deny:hover { border-color: #B4955E; }
 
-.btn-cookie-allow { transition: background-color var(--dur-med) var(--ease-lux); }
+.btn-cookie-allow {
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 8px 18px -10px rgba(27,48,79,.4);
+  transition: background-color var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+}
 .btn-cookie-allow:hover { background: #142540; }
 
 .link-gold:hover { color: #B4955E; }
 
 /* Botão flutuante do WhatsApp — sempre visível, em qualquer tela, do
-   carregamento da página até o fim da rolagem. */
+   carregamento da página até o fim da rolagem. Relevo 3D acentuado e
+   anel dourado para reforçar o toque luxuoso; ícone verde WhatsApp para
+   chamar a atenção instantaneamente. */
 #wa-fab {
+  background: radial-gradient(120% 120% at 30% 22%, #22405f 0%, #1B304F 55%, #142540 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.4) inset,
+    0 -3px 6px rgba(0,0,0,.25) inset,
+    0 4px 0 rgba(10,20,36,.55),
+    0 18px 34px -8px rgba(20,37,64,.55);
   transition: transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
 }
-#wa-fab:hover { transform: scale(1.06); box-shadow: 0 14px 34px rgba(20,37,64,.5); }
+#wa-fab:hover {
+  transform: translateY(-4px) scale(1.07);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.5) inset,
+    0 -3px 6px rgba(0,0,0,.28) inset,
+    0 7px 0 rgba(10,20,36,.55),
+    0 26px 48px -10px rgba(20,37,64,.62);
+}
+#wa-fab:active { transform: translateY(-1px) scale(1.02); box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 -2px 4px rgba(0,0,0,.3) inset, 0 2px 0 rgba(10,20,36,.5), 0 10px 20px -8px rgba(20,37,64,.5); }
 #wa-fab::after {
   content: "";
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  border: 1.5px solid rgba(180,149,94,.55);
+  border: 1.5px solid rgba(180,149,94,.6);
   animation: wa-pulse 2.6s var(--ease-lux) infinite;
   pointer-events: none;
 }
