@@ -30,7 +30,7 @@
 
 <div style="position:relative;z-index:1">
 
-<header id="site-header" style="position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px clamp(16px,4vw,44px);background:rgba(255,255,255,.78);backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
+<header id="site-header" style="position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px clamp(16px,4vw,44px);background:rgba(255,255,255,.5);backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border-bottom:1px solid rgba(255,255,255,.4);box-shadow:0 1px 0 rgba(255,255,255,.5) inset;transition:background .25s ease,border-color .25s ease,box-shadow .25s ease">
   <a href="#topo" style="display:flex;align-items:center;gap:14px;text-decoration:none;min-height:48px">
     <img src="assets/logo-prime.png" alt="Prime Cortinas · Lavanderia" style="height:clamp(32px,4.6vw,40px);width:auto;display:block">
   </a>
@@ -196,37 +196,39 @@
     <div data-reveal style="max-width:620px;margin:0 auto clamp(44px,5vw,64px);text-align:center">
       <h2 class="sec-title" style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:clamp(2.15rem,4.4vw,3.3rem);line-height:1.15;letter-spacing:-.01em;color:#1B304F;margin:0;text-wrap:balance">Cinco passos, e você não sobe em escada nenhuma</h2>
     </div>
-    <div data-reveal class="pc-steps" style="max-width:980px;margin:0 auto">
+    <div data-reveal id="steps-timeline" class="pc-steps" style="max-width:980px;margin:0 auto">
+      <div class="steps-line-track"></div>
+      <div id="steps-line-fill" class="steps-line-fill"></div>
       <div class="step-item">
-        <span class="pc-icon-badge" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600;color:#8A6F3E">1</span>
+        <span class="pc-icon-badge step-num" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600">1</span>
         <div class="pc-card" style="padding:clamp(16px,1.8vw,20px);width:100%;box-sizing:border-box">
           <h3 style="font-size:.92rem;font-weight:700;color:#1B304F;margin:0 0 8px;line-height:1.3">Você chama no WhatsApp</h3>
           <p style="font-size:.84rem;line-height:1.6;color:#5A6577;margin:0;text-wrap:pretty">Manda uma mensagem contando o que você tem em casa. Se quiser, manda uma foto. É rápido.</p>
         </div>
       </div>
       <div class="step-item">
-        <span class="pc-icon-badge" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600;color:#8A6F3E">2</span>
+        <span class="pc-icon-badge step-num" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600">2</span>
         <div class="pc-card" style="padding:clamp(16px,1.8vw,20px);width:100%;box-sizing:border-box">
           <h3 style="font-size:.92rem;font-weight:700;color:#1B304F;margin:0 0 8px;line-height:1.3">A gente avalia sem custo e sem compromisso</h3>
           <p style="font-size:.84rem;line-height:1.6;color:#5A6577;margin:0;text-wrap:pretty">Olhamos o tecido, a altura, a quantidade, e explicamos exatamente o que dá para fazer com cada peça.</p>
         </div>
       </div>
       <div class="step-item">
-        <span class="pc-icon-badge" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600;color:#8A6F3E">3</span>
+        <span class="pc-icon-badge step-num" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600">3</span>
         <div class="pc-card" style="padding:clamp(16px,1.8vw,20px);width:100%;box-sizing:border-box">
           <h3 style="font-size:.92rem;font-weight:700;color:#1B304F;margin:0 0 8px;line-height:1.3">Retiramos na sua casa</h3>
           <p style="font-size:.84rem;line-height:1.6;color:#5A6577;margin:0;text-wrap:pretty">Vamos até você, tiramos as cortinas do trilho e levamos. Você não precisa fazer nada.</p>
         </div>
       </div>
       <div class="step-item">
-        <span class="pc-icon-badge" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600;color:#8A6F3E">4</span>
+        <span class="pc-icon-badge step-num" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600">4</span>
         <div class="pc-card" style="padding:clamp(16px,1.8vw,20px);width:100%;box-sizing:border-box">
           <h3 style="font-size:.92rem;font-weight:700;color:#1B304F;margin:0 0 8px;line-height:1.3">Higienizamos à mão, peça por peça</h3>
           <p style="font-size:.84rem;line-height:1.6;color:#5A6577;margin:0;text-wrap:pretty">Molho, lavagem manual, secagem ao ar e prensa. Cada tecido no seu processo.</p>
         </div>
       </div>
       <div class="step-item">
-        <span class="pc-icon-badge" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600;color:#8A6F3E">5</span>
+        <span class="pc-icon-badge step-num" style="width:40px;height:40px;background:#fff;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.2rem;font-weight:600">5</span>
         <div class="pc-card" style="padding:clamp(16px,1.8vw,20px);width:100%;box-sizing:border-box">
           <h3 style="font-size:.92rem;font-weight:700;color:#1B304F;margin:0 0 8px;line-height:1.3">Recolocamos no lugar</h3>
           <p style="font-size:.84rem;line-height:1.6;color:#5A6577;margin:0;text-wrap:pretty">Trazemos de volta e instalamos exatamente onde estavam. Você só aproveita o resultado.</p>
@@ -556,7 +558,8 @@
 <footer style="background:#142540;color:#fff;padding:clamp(64px,8vw,110px) clamp(24px,5vw,44px) clamp(32px,4vw,44px)">
   <div style="max-width:760px;margin:0 auto;text-align:center">
     <div data-reveal>
-      <div style="display:inline-flex;flex-direction:column;align-items:center;gap:12px;margin:0 0 clamp(34px,4.5vw,48px)">
+      <div style="display:inline-flex;flex-direction:column;align-items:center;gap:16px;margin:0 0 clamp(34px,4.5vw,48px)">
+        <img src="assets/logo-prime.png" alt="Prime Cortinas · Lavanderia" style="height:clamp(64px,11vw,120px);width:auto;display:block;filter:brightness(0) invert(1)">
         <span style="font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(1.35rem,3vw,1.9rem);letter-spacing:.16em;color:#fff;font-weight:500;line-height:1">PRIME CORTINAS</span>
         <span style="display:flex;align-items:center;gap:14px;width:100%">
           <span style="flex:1;height:1px;background:#B4955E"></span>
@@ -582,7 +585,7 @@
       <p style="font-size:.85rem;line-height:1.7;margin:8px 0 0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px">
         <a href="politica-de-privacidade/" class="link-gold" style="color:rgba(255,255,255,.62)">Política de privacidade</a>
         <a href="termos-de-uso/" class="link-gold" style="color:rgba(255,255,255,.62)">Termos de uso</a>
-        <a href="/bio" class="link-gold" style="color:rgba(255,255,255,.62)">Links</a>
+        <a href="https://minhacortinalimpa.com.br/bio/" target="_blank" rel="noopener" class="link-gold" style="color:rgba(255,255,255,.62)">Links</a>
       </p>
     </div>
   </div>

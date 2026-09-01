@@ -52,10 +52,13 @@
       if (pct >= 50 && !scrollFired[50]) { scrollFired[50] = 1; dl({ event: 'scroll_50' }); }
       if (pct >= 90 && !scrollFired[90]) { scrollFired[90] = 1; dl({ event: 'scroll_90' }); }
       if (header) {
+        // Efeito "vidro" (glass) sempre translúcido com blur — nunca vira
+        // sólido, só fica um pouco mais opaco ao rolar para manter a
+        // legibilidade do conteúdo por trás.
         var solid = st > 12;
-        header.style.background = solid ? '#FFFFFF' : 'rgba(255,255,255,.78)';
-        header.style.borderBottomColor = solid ? '#E6E3DC' : 'transparent';
-        header.style.boxShadow = solid ? '0 1px 14px rgba(27,48,79,.06)' : 'none';
+        header.style.background = solid ? 'rgba(255,255,255,.72)' : 'rgba(255,255,255,.5)';
+        header.style.borderBottomColor = solid ? 'rgba(230,227,220,.7)' : 'rgba(255,255,255,.4)';
+        header.style.boxShadow = solid ? '0 1px 0 rgba(255,255,255,.5) inset, 0 1px 14px rgba(27,48,79,.08)' : '0 1px 0 rgba(255,255,255,.5) inset';
       }
     }
     if (header) {
@@ -138,33 +141,45 @@
     initCoverflow('pf-stage', 'pf-slide', 'pf-prev', 'pf-next');
     initCoverflow('testi-stage', 'testi-slide', 'testi-prev', 'testi-next');
 
-    // ---- "O problema": régua dourada que se preenche conforme a leitura
-    // avança, e os números 01-04 trocam de dourado para azul-marinho ----
-    var problemTimeline = document.getElementById('problem-timeline');
-    var problemFill = document.getElementById('problem-line-fill');
-    if (problemTimeline && problemFill) {
-      var problemNums = Array.prototype.slice.call(problemTimeline.querySelectorAll('.problem-num'));
-      var problemTicking = false;
-      function updateProblemTimeline() {
-        problemTicking = false;
-        var rect = problemTimeline.getBoundingClientRect();
+    // ---- Régua dourada que se preenche conforme a leitura avança, com os
+    // números trocando de dourado para azul-marinho — usada em "O problema"
+    // (sempre vertical) e em "Como funciona" (horizontal no desktop,
+    // vertical no mobile, acompanhando a mudança de layout da seção). ----
+    function initTimelineFill(containerId, fillId, numSelector, mode) {
+      var container = document.getElementById(containerId);
+      var fill = document.getElementById(fillId);
+      if (!container || !fill) return;
+      var nums = Array.prototype.slice.call(container.querySelectorAll(numSelector));
+      var count = nums.length;
+      var ticking = false;
+      function update() {
+        ticking = false;
+        var rect = container.getBoundingClientRect();
         var refY = window.innerHeight * 0.55; // linha de leitura de referência
         var progressPx = refY - rect.top;
         var progress = rect.height > 0 ? Math.max(0, Math.min(1, progressPx / rect.height)) : 0;
-        problemFill.style.height = (progress * 100) + '%';
-        problemNums.forEach(function (num) {
-          var numRect = num.getBoundingClientRect();
-          var numMid = (numRect.top + numRect.height / 2) - rect.top;
-          num.classList.toggle('is-passed', progressPx >= numMid);
+        var horizontal = mode === 'horizontal' || (mode === 'responsive' && window.innerWidth > 760);
+        if (horizontal) {
+          fill.style.height = '';
+          fill.style.width = (progress * 88) + '%'; // acompanha o trilho (6% a 94%)
+        } else {
+          fill.style.width = '';
+          fill.style.height = (progress * 100) + '%';
+        }
+        nums.forEach(function (num, i) {
+          var threshold = count > 1 ? i / (count - 1) : 0;
+          num.classList.toggle('is-passed', progress >= threshold);
         });
       }
-      function onScrollProblemTimeline() {
-        if (!problemTicking) { problemTicking = true; requestAnimationFrame(updateProblemTimeline); }
+      function onScroll() {
+        if (!ticking) { ticking = true; requestAnimationFrame(update); }
       }
-      window.addEventListener('scroll', onScrollProblemTimeline, { passive: true });
-      window.addEventListener('resize', onScrollProblemTimeline);
-      updateProblemTimeline();
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', onScroll);
+      update();
     }
+    initTimelineFill('problem-timeline', 'problem-line-fill', '.problem-num', 'vertical');
+    initTimelineFill('steps-timeline', 'steps-line-fill', '.step-num', 'responsive');
 
     // ---- Barra de consentimento de cookies ----
     var bar = document.getElementById('cookie-bar');
