@@ -35,7 +35,7 @@
     waLinks.forEach(function (a) {
       var wa = a.getAttribute('href') + (utmQS ? '&' + utmQS : '');
       a.setAttribute('data-wa-url', wa);
-      a.setAttribute('href', '/obrigado/?wa=' + encodeURIComponent(wa) + (utmQS ? '&' + utmQS : ''));
+      a.setAttribute('href', 'obrigado/?wa=' + encodeURIComponent(wa) + (utmQS ? '&' + utmQS : ''));
       a.addEventListener('click', function () {
         dl({ event: 'cta_click', cta_section: a.getAttribute('data-cta') || '' });
       });

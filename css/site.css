@@ -19,6 +19,9 @@
   --dur-med: .42s;
 }
 
+html {
+  overflow-x: hidden;
+}
 body {
   margin: 0;
   background: #FFFFFF;
@@ -27,6 +30,7 @@ body {
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  width: 100%;
 }
 
 body::before {
@@ -359,12 +363,16 @@ summary::-webkit-details-marker { display: none; }
 
 @keyframes prime-spin { to { transform: rotate(360deg); } }
 
-/* ── Hero: versão completa em desktop, foto cheia com overlay no mobile ── */
+/* ── Hero: versão completa em desktop, foto cheia com overlay no mobile ──
+   IMPORTANTE: display fica só aqui (nunca inline no elemento), senão o
+   estilo inline vence a media query e as duas heros aparecem juntas. */
 .hero-mobile { display: none; }
 @media (max-width: 760px) {
   .hero-desktop { display: none; }
   .hero-mobile { display: flex; }
 }
+.hero-mobile-content { display: flex; flex-direction: column; height: 100%; }
+.hero-mobile-spacer { flex: 1 1 auto; min-height: 20px; }
 
 /* ── "O que está incluído": grade fechada em 3 colunas (2 linhas exatas),
    sem sobra de espaço ou card órfão numa linha ─────────────────────── */
@@ -454,6 +462,11 @@ summary::-webkit-details-marker { display: none; }
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Os slides fora de foco ficam deslocados bem além da borda via
+     transform — sem isto, essa área invisível alarga a página e cria
+     scroll horizontal fantasma (a página "escorrega" ao arrastar no
+     celular). */
+  overflow: hidden;
 }
 .pf-slides {
   position: relative;
