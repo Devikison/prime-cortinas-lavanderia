@@ -83,22 +83,25 @@
       }
     }
 
-    // ---- Portfólio: carrossel "coverflow" — card central em foco, vizinhos
-    // desfocados nas laterais, com transição lenta via setas ou arraste ----
-    var pfStage = document.getElementById('pf-stage');
-    if (pfStage) {
-      var pfSlides = Array.prototype.slice.call(pfStage.querySelectorAll('.pf-slide'));
-      var pfN = pfSlides.length;
-      var pfCurrent = 0;
+    // ---- Carrossel "coverflow" reutilizável — card central em foco,
+    // vizinhos desfocados nas laterais, transição lenta via setas ou
+    // arraste. Usado no Portfólio e na Prova social. ----
+    function initCoverflow(stageId, slideClass, prevId, nextId) {
+      var stage = document.getElementById(stageId);
+      if (!stage) return;
+      var slides = Array.prototype.slice.call(stage.querySelectorAll('.' + slideClass));
+      var n = slides.length;
+      if (!n) return;
+      var current = 0;
 
-      function pfWrapDelta(d) {
-        d = ((d % pfN) + pfN) % pfN;
-        if (d > pfN / 2) d -= pfN;
+      function wrapDelta(d) {
+        d = ((d % n) + n) % n;
+        if (d > n / 2) d -= n;
         return d;
       }
-      function pfRender() {
-        pfSlides.forEach(function (slide, i) {
-          var delta = pfWrapDelta(i - pfCurrent);
+      function render() {
+        slides.forEach(function (slide, i) {
+          var delta = wrapDelta(i - current);
           var ad = Math.abs(delta);
           var scale = ad === 0 ? 1 : ad === 1 ? 0.78 : 0.62;
           var op = ad === 0 ? 1 : ad === 1 ? 0.55 : 0;
@@ -112,26 +115,28 @@
           slide.setAttribute('aria-hidden', ad === 0 ? 'false' : 'true');
         });
       }
-      var pfPrev = document.getElementById('pf-prev');
-      var pfNext = document.getElementById('pf-next');
-      if (pfPrev) pfPrev.addEventListener('click', function () { pfCurrent = (pfCurrent - 1 + pfN) % pfN; pfRender(); });
-      if (pfNext) pfNext.addEventListener('click', function () { pfCurrent = (pfCurrent + 1) % pfN; pfRender(); });
+      var prevBtn = document.getElementById(prevId);
+      var nextBtn = document.getElementById(nextId);
+      if (prevBtn) prevBtn.addEventListener('click', function () { current = (current - 1 + n) % n; render(); });
+      if (nextBtn) nextBtn.addEventListener('click', function () { current = (current + 1) % n; render(); });
 
-      // Arraste/toque para passar as peças no celular
-      var pfTouchX = null;
-      pfStage.addEventListener('touchstart', function (e) { pfTouchX = e.touches[0].clientX; }, { passive: true });
-      pfStage.addEventListener('touchend', function (e) {
-        if (pfTouchX === null) return;
-        var dx = e.changedTouches[0].clientX - pfTouchX;
+      // Arraste/toque para passar no celular
+      var touchX = null;
+      stage.addEventListener('touchstart', function (e) { touchX = e.touches[0].clientX; }, { passive: true });
+      stage.addEventListener('touchend', function (e) {
+        if (touchX === null) return;
+        var dx = e.changedTouches[0].clientX - touchX;
         if (Math.abs(dx) > 40) {
-          pfCurrent = dx < 0 ? (pfCurrent + 1) % pfN : (pfCurrent - 1 + pfN) % pfN;
-          pfRender();
+          current = dx < 0 ? (current + 1) % n : (current - 1 + n) % n;
+          render();
         }
-        pfTouchX = null;
+        touchX = null;
       });
 
-      pfRender();
+      render();
     }
+    initCoverflow('pf-stage', 'pf-slide', 'pf-prev', 'pf-next');
+    initCoverflow('testi-stage', 'testi-slide', 'testi-prev', 'testi-next');
 
     // ---- "O problema": régua dourada que se preenche conforme a leitura
     // avança, e os números 01-04 trocam de dourado para azul-marinho ----
@@ -159,45 +164,6 @@
       window.addEventListener('scroll', onScrollProblemTimeline, { passive: true });
       window.addEventListener('resize', onScrollProblemTimeline);
       updateProblemTimeline();
-    }
-
-    // ---- Depoimentos: pager de 3 em 3, com setas e indicadores ----
-    var testiTrack = document.getElementById('testi-track');
-    if (testiTrack) {
-      var testiCards = Array.prototype.slice.call(testiTrack.querySelectorAll('.testi-card'));
-      var testiPrev = document.getElementById('testi-prev');
-      var testiNext = document.getElementById('testi-next');
-      var testiDotsWrap = document.getElementById('testi-dots');
-      var PAGE_SIZE = 3;
-      var pageCount = Math.max(1, Math.ceil(testiCards.length / PAGE_SIZE));
-      var page = 0;
-
-      var dots = [];
-      if (testiDotsWrap && pageCount > 1) {
-        for (var d = 0; d < pageCount; d++) {
-          var dot = document.createElement('span');
-          testiDotsWrap.appendChild(dot);
-          dots.push(dot);
-        }
-      }
-
-      function renderTesti() {
-        testiCards.forEach(function (card, i) {
-          card.classList.toggle('is-active', i >= page * PAGE_SIZE && i < (page + 1) * PAGE_SIZE);
-        });
-        dots.forEach(function (dot, i) { dot.classList.toggle('is-active', i === page); });
-        if (testiPrev) testiPrev.disabled = page === 0;
-        if (testiNext) testiNext.disabled = page === pageCount - 1;
-        if (testiPrev) testiPrev.style.display = pageCount > 1 ? '' : 'none';
-        if (testiNext) testiNext.style.display = pageCount > 1 ? '' : 'none';
-      }
-      if (testiPrev) testiPrev.addEventListener('click', function () {
-        if (page > 0) { page--; renderTesti(); }
-      });
-      if (testiNext) testiNext.addEventListener('click', function () {
-        if (page < pageCount - 1) { page++; renderTesti(); }
-      });
-      renderTesti();
     }
 
     // ---- Barra de consentimento de cookies ----
