@@ -387,7 +387,6 @@ summary::-webkit-details-marker { display: none; }
 /* ── Mobile: títulos centralizados e quebras de texto limpas ───────────── */
 @media (max-width: 700px) {
   .sec-eyebrow, .sec-title, .mobile-center { text-align: center; }
-  .deco-line { display: none; }
 }
 .sec-title, h1, h2, h3 { text-wrap: balance; }
 
