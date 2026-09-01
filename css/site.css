@@ -156,6 +156,12 @@ summary::-webkit-details-marker { display: none; }
    (brilho no topo + sombra na base) em todos os ícones do site, para dar
    um acabamento estruturado e "lapidado". */
 .pc-icon-badge {
+  position: relative;
+  /* Sem isto, um ::before decorativo posicionado em absolute (como a
+     linha conectora do "Como funciona") pinta por cima do badge mesmo
+     vindo antes no HTML — elementos posicionados sempre ficam acima de
+     conteúdo não-posicionado na pilha de camadas. */
+  z-index: 1;
   width: 54px;
   height: 54px;
   flex: none;
