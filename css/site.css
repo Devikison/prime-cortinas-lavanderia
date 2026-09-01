@@ -1,0 +1,280 @@
+/* Prime Higienização de Cortinas — estilos compartilhados entre as páginas.
+   O layout de cada página fica em estilos inline (como no protótipo); este
+   arquivo cobre o que estilo inline não resolve: fundo com textura, sistema
+   de cards com profundidade, motion lento e "luxuoso", e estados de :hover. */
+
+:root {
+  --navy: #1B304F;
+  --navy-deep: #142540;
+  --gold: #B4955E;
+  --gold-text: #8A6F3E;
+  --bg: #FFFFFF;
+  --surface: #F7F6F3;
+  --border: #E6E3DC;
+  --text: #1B304F;
+  --text-muted: #5A6577;
+  /* curva de desaceleração suave — a base do motion "devagar e elegante" */
+  --ease-lux: cubic-bezier(.16,1,.3,1);
+  --dur-slow: .65s;
+  --dur-med: .42s;
+}
+
+body {
+  margin: 0;
+  background: #FFFFFF;
+  color: #1B304F;
+  font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(90deg, rgba(27,48,79,.055) 0 1px, rgba(27,48,79,0) 1px 4px, rgba(27,48,79,.022) 4px 5px, rgba(27,48,79,0) 5px 34px),
+    repeating-linear-gradient(90deg, rgba(27,48,79,.03) 0 18px, rgba(27,48,79,0) 18px 96px),
+    radial-gradient(120% 55% at 50% -10%, rgba(180,149,94,.10), rgba(255,255,255,0) 62%);
+}
+
+a { color: #1B304F; text-decoration-color: rgba(180,149,94,.55); text-underline-offset: 3px; transition: color var(--dur-med) var(--ease-lux); }
+a:hover { color: #8A6F3E; }
+
+/* FAQ accordion */
+summary { list-style: none; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+details[name="faq-prime"] { transition: background-color var(--dur-med) var(--ease-lux); }
+details[name="faq-prime"] summary { transition: color var(--dur-med) var(--ease-lux); }
+details[name="faq-prime"]:hover summary { color: var(--gold-text); }
+details[open] .faq-plus { transform: rotate(45deg); }
+.faq-plus { transition: transform var(--dur-slow) var(--ease-lux) !important; }
+
+/* ── Sistema de cards ─────────────────────────────────────────────────── */
+.pc-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(27,48,79,.05), 0 20px 44px -28px rgba(27,48,79,.18);
+  transition: transform var(--dur-slow) var(--ease-lux),
+              box-shadow var(--dur-slow) var(--ease-lux),
+              border-color var(--dur-slow) var(--ease-lux);
+  will-change: transform;
+}
+.pc-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 34px 64px -26px rgba(27,48,79,.28), 0 6px 18px rgba(27,48,79,.08);
+  border-color: rgba(180,149,94,.5);
+}
+
+.pc-card-dark {
+  background: var(--navy);
+  border-color: var(--navy);
+  box-shadow: 0 1px 2px rgba(20,37,64,.3), 0 20px 44px -28px rgba(20,37,64,.5);
+}
+.pc-card-dark:hover {
+  box-shadow: 0 34px 64px -22px rgba(20,37,64,.55), 0 6px 18px rgba(0,0,0,.15);
+  border-color: var(--gold);
+}
+
+.pc-card-feature {
+  box-shadow: 0 2px 4px rgba(27,48,79,.05), 0 28px 60px -30px rgba(27,48,79,.2);
+}
+
+/* Distintivo circular para ícones dentro de um card */
+.pc-icon-badge {
+  width: 54px;
+  height: 54px;
+  flex: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(180,149,94,.08);
+  border: 1px solid rgba(180,149,94,.32);
+  transition: background var(--dur-slow) var(--ease-lux),
+              border-color var(--dur-slow) var(--ease-lux),
+              transform var(--dur-slow) var(--ease-lux);
+}
+.pc-card:hover .pc-icon-badge {
+  background: rgba(180,149,94,.16);
+  border-color: rgba(180,149,94,.6);
+  transform: scale(1.08);
+}
+.pc-icon-badge-light {
+  background: rgba(255,255,255,.06);
+  border-color: rgba(180,149,94,.45);
+}
+.pc-card-dark:hover .pc-icon-badge-light {
+  background: rgba(180,149,94,.18);
+  border-color: var(--gold);
+}
+
+/* Distintivo preenchido — para seções que pedem mais cor/atenção */
+.pc-icon-badge-solid {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+.pc-card:hover .pc-icon-badge-solid {
+  background: var(--navy);
+  border-color: var(--navy);
+  transform: scale(1.08);
+}
+
+/* Barra de acento no topo do card — dá presença de cor sem pesar */
+.pc-card-accent { border-top: 3px solid var(--gold); }
+
+/* Linha conectora sutil entre os passos do "Como funciona" (desktop) */
+.pc-steps { position: relative; }
+.pc-steps::before {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  top: 22px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(180,149,94,0), rgba(180,149,94,.55) 12%, rgba(180,149,94,.55) 88%, rgba(180,149,94,0));
+}
+@media (max-width: 760px) {
+  .pc-steps::before { display: none; }
+}
+
+/* Molduras de imagem com profundidade (hero, fechamento) */
+.pc-frame { position: relative; }
+.pc-frame::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  z-index: -1;
+  border-radius: 2px;
+  box-shadow: 0 40px 80px -32px rgba(27,48,79,.32);
+}
+
+/* Botões e links com hover — motion lento e com elevação */
+.btn-primary { transition: background var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux); }
+.btn-primary:hover { background: #142540; transform: translateY(-3px); box-shadow: 0 20px 36px -14px rgba(27,48,79,.4); }
+
+.btn-dark { transition: background-color var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux); }
+.btn-dark:hover { background: #142540; box-shadow: 0 14px 26px -12px rgba(27,48,79,.4); }
+
+.btn-footer { transition: transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux); }
+.btn-footer:hover { transform: translateY(-3px); box-shadow: 0 24px 44px -16px rgba(0,0,0,.4); }
+
+.btn-outline { transition: border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux); }
+.btn-outline:hover { border-color: #B4955E; transform: translateY(-2px); box-shadow: 0 14px 28px -14px rgba(27,48,79,.2); }
+
+.btn-cookie-deny { transition: border-color var(--dur-med) var(--ease-lux); }
+.btn-cookie-deny:hover { border-color: #B4955E; }
+
+.btn-cookie-allow { transition: background-color var(--dur-med) var(--ease-lux); }
+.btn-cookie-allow:hover { background: #142540; }
+
+.link-gold:hover { color: #B4955E; }
+
+/* Botão flutuante do WhatsApp — sempre visível, em qualquer tela, do
+   carregamento da página até o fim da rolagem. */
+#wa-fab {
+  transition: transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+}
+#wa-fab:hover { transform: scale(1.06); box-shadow: 0 14px 34px rgba(20,37,64,.5); }
+#wa-fab::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(180,149,94,.55);
+  animation: wa-pulse 2.6s var(--ease-lux) infinite;
+  pointer-events: none;
+}
+@keyframes wa-pulse {
+  0% { transform: scale(.92); opacity: .8; }
+  70% { transform: scale(1.28); opacity: 0; }
+  100% { transform: scale(1.28); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #wa-fab::after { animation: none; display: none; }
+}
+
+/* Placeholder de imagem — mantém o espaço reservado, pronto para receber a
+   foto real (ver README do pacote de design: sem fotos disponíveis ainda). */
+.img-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: #F7F6F3;
+  border: 1.5px dashed rgba(27,48,79,.3);
+  color: #5A6577;
+}
+.img-placeholder svg { opacity: .45; flex: none; }
+.img-placeholder span { font-size: 13px; line-height: 1.4; max-width: 88%; }
+
+/* Revelação suave ao rolar (aplicada via JS a [data-reveal]) */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(22px);
+  transition: opacity .9s var(--ease-lux), transform .9s var(--ease-lux);
+}
+[data-reveal].is-visible { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1; transform: none; transition: none; }
+  .pc-card, .btn-primary, .btn-dark, .btn-footer, .btn-outline { transition: none; }
+}
+
+@keyframes prime-spin { to { transform: rotate(360deg); } }
+
+/* ── Mobile: títulos centralizados e quebras de texto limpas ───────────── */
+@media (max-width: 700px) {
+  .sec-eyebrow, .sec-title, .mobile-center { text-align: center; }
+  .problem-item { grid-template-columns: 1fr !important; justify-items: center; text-align: center; }
+  .problem-item p { text-align: left; }
+  .deco-line { display: none; }
+}
+.sec-title, h1, h2, h3 { text-wrap: balance; }
+
+/* ── Carrossel de portfólio ──────────────────────────────────────────── */
+.pf-track {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+.pf-track::-webkit-scrollbar { display: none; }
+.pf-card { flex: 0 0 auto; width: min(76vw, 300px); scroll-snap-align: start; overflow: hidden; }
+.pf-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -8px rgba(27,48,79,.3);
+  transition: border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+  z-index: 2;
+}
+.pf-arrow:hover { border-color: var(--gold); transform: translateY(-50%) scale(1.08); box-shadow: 0 14px 30px -10px rgba(27,48,79,.4); }
+.pf-arrow-prev { left: -8px; }
+.pf-arrow-next { right: -8px; }
+@media (max-width: 900px) {
+  .pf-arrow { display: none; }
+}
