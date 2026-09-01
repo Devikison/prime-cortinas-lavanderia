@@ -190,7 +190,11 @@
       waLink.setAttribute('href', target);
       dl({ event: 'whatsapp_redirect', destination: target });
       dl({ event: 'lead' });
-      setTimeout(function () { window.open(target, '_blank'); }, 900);
+      // Navega a própria aba (em vez de window.open) — celulares bloqueiam
+      // pop-ups abertos fora de um clique direto do usuário, então
+      // window.open() silenciosamente falhava e a página ficava parada
+      // no "Te levando para o WhatsApp…" para sempre.
+      setTimeout(function () { location.href = target; }, 900);
     }
   });
 })();
