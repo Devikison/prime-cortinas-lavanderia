@@ -206,7 +206,7 @@ summary::-webkit-details-marker { display: none; }
   position: absolute;
   left: 6%;
   right: 6%;
-  top: 22px;
+  top: 20px;
   height: 1px;
   background: linear-gradient(90deg, rgba(180,149,94,0), rgba(180,149,94,.55) 12%, rgba(180,149,94,.55) 88%, rgba(180,149,94,0));
 }
@@ -358,6 +358,23 @@ summary::-webkit-details-marker { display: none; }
 }
 
 @keyframes prime-spin { to { transform: rotate(360deg); } }
+
+/* ── Hero: versão completa em desktop, foto cheia com overlay no mobile ── */
+.hero-mobile { display: none; }
+@media (max-width: 760px) {
+  .hero-desktop { display: none; }
+  .hero-mobile { display: flex; }
+}
+
+/* ── "O que está incluído": grade fechada em 3 colunas (2 linhas exatas),
+   sem sobra de espaço ou card órfão numa linha ─────────────────────── */
+.included-grid { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 860px) {
+  .included-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+  .included-grid { grid-template-columns: 1fr; }
+}
 
 /* ── Mobile: títulos centralizados e quebras de texto limpas ───────────── */
 @media (max-width: 700px) {
