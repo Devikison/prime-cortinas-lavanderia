@@ -83,7 +83,83 @@
       }
     }
 
-    // ---- Portfólio: carrossel infinito (100% CSS, sem JS) ----
+    // ---- Portfólio: carrossel "coverflow" — card central em foco, vizinhos
+    // desfocados nas laterais, com transição lenta via setas ou arraste ----
+    var pfStage = document.getElementById('pf-stage');
+    if (pfStage) {
+      var pfSlides = Array.prototype.slice.call(pfStage.querySelectorAll('.pf-slide'));
+      var pfN = pfSlides.length;
+      var pfCurrent = 0;
+
+      function pfWrapDelta(d) {
+        d = ((d % pfN) + pfN) % pfN;
+        if (d > pfN / 2) d -= pfN;
+        return d;
+      }
+      function pfRender() {
+        pfSlides.forEach(function (slide, i) {
+          var delta = pfWrapDelta(i - pfCurrent);
+          var ad = Math.abs(delta);
+          var scale = ad === 0 ? 1 : ad === 1 ? 0.78 : 0.62;
+          var op = ad === 0 ? 1 : ad === 1 ? 0.55 : 0;
+          var blur = ad === 0 ? 0 : ad === 1 ? 2 : 5;
+          slide.style.setProperty('--delta', delta);
+          slide.style.setProperty('--scale', scale);
+          slide.style.setProperty('--op', op);
+          slide.style.setProperty('--blur', blur + 'px');
+          slide.style.zIndex = 10 - ad;
+          slide.style.pointerEvents = ad === 0 ? 'auto' : 'none';
+          slide.setAttribute('aria-hidden', ad === 0 ? 'false' : 'true');
+        });
+      }
+      var pfPrev = document.getElementById('pf-prev');
+      var pfNext = document.getElementById('pf-next');
+      if (pfPrev) pfPrev.addEventListener('click', function () { pfCurrent = (pfCurrent - 1 + pfN) % pfN; pfRender(); });
+      if (pfNext) pfNext.addEventListener('click', function () { pfCurrent = (pfCurrent + 1) % pfN; pfRender(); });
+
+      // Arraste/toque para passar as peças no celular
+      var pfTouchX = null;
+      pfStage.addEventListener('touchstart', function (e) { pfTouchX = e.touches[0].clientX; }, { passive: true });
+      pfStage.addEventListener('touchend', function (e) {
+        if (pfTouchX === null) return;
+        var dx = e.changedTouches[0].clientX - pfTouchX;
+        if (Math.abs(dx) > 40) {
+          pfCurrent = dx < 0 ? (pfCurrent + 1) % pfN : (pfCurrent - 1 + pfN) % pfN;
+          pfRender();
+        }
+        pfTouchX = null;
+      });
+
+      pfRender();
+    }
+
+    // ---- "O problema": régua dourada que se preenche conforme a leitura
+    // avança, e os números 01-04 trocam de dourado para azul-marinho ----
+    var problemTimeline = document.getElementById('problem-timeline');
+    var problemFill = document.getElementById('problem-line-fill');
+    if (problemTimeline && problemFill) {
+      var problemNums = Array.prototype.slice.call(problemTimeline.querySelectorAll('.problem-num'));
+      var problemTicking = false;
+      function updateProblemTimeline() {
+        problemTicking = false;
+        var rect = problemTimeline.getBoundingClientRect();
+        var refY = window.innerHeight * 0.55; // linha de leitura de referência
+        var progressPx = refY - rect.top;
+        var progress = rect.height > 0 ? Math.max(0, Math.min(1, progressPx / rect.height)) : 0;
+        problemFill.style.height = (progress * 100) + '%';
+        problemNums.forEach(function (num) {
+          var numRect = num.getBoundingClientRect();
+          var numMid = (numRect.top + numRect.height / 2) - rect.top;
+          num.classList.toggle('is-passed', progressPx >= numMid);
+        });
+      }
+      function onScrollProblemTimeline() {
+        if (!problemTicking) { problemTicking = true; requestAnimationFrame(updateProblemTimeline); }
+      }
+      window.addEventListener('scroll', onScrollProblemTimeline, { passive: true });
+      window.addEventListener('resize', onScrollProblemTimeline);
+      updateProblemTimeline();
+    }
 
     // ---- Depoimentos: pager de 3 em 3, com setas e indicadores ----
     var testiTrack = document.getElementById('testi-track');

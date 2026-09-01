@@ -23,7 +23,7 @@ body {
   margin: 0;
   background: #FFFFFF;
   color: #1B304F;
-  font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -44,14 +44,77 @@ body::before {
 a { color: #1B304F; text-decoration-color: rgba(180,149,94,.55); text-underline-offset: 3px; transition: color var(--dur-med) var(--ease-lux); }
 a:hover { color: #8A6F3E; }
 
-/* FAQ accordion */
+/* FAQ — cards com leve relevo 3D, abertura lenta e luxuosa (CSS Grid
+   animatable rows) e interior dourado da marca quando aberto. */
 summary { list-style: none; cursor: pointer; }
 summary::-webkit-details-marker { display: none; }
-details[name="faq-prime"] { transition: background-color var(--dur-med) var(--ease-lux); }
-details[name="faq-prime"] summary { transition: color var(--dur-med) var(--ease-lux); }
-details[name="faq-prime"]:hover summary { color: var(--gold-text); }
-details[open] .faq-plus { transform: rotate(45deg); }
-.faq-plus { transition: transform var(--dur-slow) var(--ease-lux) !important; }
+
+.faq-card {
+  position: relative;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 2px 4px rgba(27,48,79,.05), 0 20px 40px -30px rgba(27,48,79,.18);
+  transition: box-shadow var(--dur-slow) var(--ease-lux), border-color var(--dur-slow) var(--ease-lux), transform var(--dur-slow) var(--ease-lux);
+}
+.faq-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(180,149,94,.45);
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 24px 46px -26px rgba(27,48,79,.26);
+}
+.faq-card[open] {
+  border-color: rgba(180,149,94,.55);
+  box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 24px 46px -26px rgba(27,48,79,.22);
+}
+.faq-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 64px;
+  padding: 18px 22px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.4;
+  transition: color var(--dur-slow) var(--ease-lux);
+}
+.faq-card:hover .faq-summary,
+.faq-card[open] .faq-summary { color: var(--gold-text); }
+.faq-plus {
+  flex: none;
+  color: var(--gold);
+  font-size: 1.4rem;
+  line-height: 1;
+  transition: transform var(--dur-slow) var(--ease-lux) !important;
+}
+.faq-card[open] .faq-plus { transform: rotate(45deg); }
+
+/* Truque do grid-template-rows animável: abre/fecha suavemente sem JS. */
+.faq-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows .7s var(--ease-lux);
+}
+.faq-card[open] .faq-panel { grid-template-rows: 1fr; }
+.faq-panel-inner {
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(180,149,94,.16), rgba(180,149,94,.05));
+  transition: background .7s var(--ease-lux);
+}
+.faq-answer {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 62ch;
+  padding: 2px 22px 22px;
+  text-wrap: pretty;
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-panel, .faq-card, .faq-summary, .faq-plus { transition: none; }
+}
 
 /* ── Sistema de cards ─────────────────────────────────────────────────── */
 .pc-card {
@@ -85,7 +148,9 @@ details[open] .faq-plus { transform: rotate(45deg); }
   box-shadow: 0 2px 4px rgba(27,48,79,.05), 0 28px 60px -30px rgba(27,48,79,.2);
 }
 
-/* Distintivo circular para ícones dentro de um card */
+/* Distintivo circular para ícones dentro de um card — relevo 3D leve
+   (brilho no topo + sombra na base) em todos os ícones do site, para dar
+   um acabamento estruturado e "lapidado". */
 .pc-icon-badge {
   width: 54px;
   height: 54px;
@@ -96,18 +161,22 @@ details[open] .faq-plus { transform: rotate(45deg); }
   justify-content: center;
   background: rgba(180,149,94,.08);
   border: 1px solid rgba(180,149,94,.32);
+  box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 -2px 3px rgba(27,48,79,.08) inset, 0 6px 14px -8px rgba(27,48,79,.35);
   transition: background var(--dur-slow) var(--ease-lux),
               border-color var(--dur-slow) var(--ease-lux),
+              box-shadow var(--dur-slow) var(--ease-lux),
               transform var(--dur-slow) var(--ease-lux);
 }
 .pc-card:hover .pc-icon-badge {
   background: rgba(180,149,94,.16);
   border-color: rgba(180,149,94,.6);
-  transform: scale(1.08);
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 -2px 3px rgba(27,48,79,.1) inset, 0 14px 22px -10px rgba(27,48,79,.4);
 }
 .pc-icon-badge-light {
   background: rgba(255,255,255,.06);
   border-color: rgba(180,149,94,.45);
+  box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 -2px 3px rgba(0,0,0,.2) inset, 0 6px 14px -8px rgba(0,0,0,.4);
 }
 .pc-card-dark:hover .pc-icon-badge-light {
   background: rgba(180,149,94,.18);
@@ -118,11 +187,13 @@ details[open] .faq-plus { transform: rotate(45deg); }
 .pc-icon-badge-solid {
   background: var(--gold);
   border-color: var(--gold);
+  box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 -3px 5px rgba(90,68,20,.35) inset, 0 8px 16px -8px rgba(27,48,79,.45);
 }
 .pc-card:hover .pc-icon-badge-solid {
   background: var(--navy);
   border-color: var(--navy);
-  transform: scale(1.08);
+  transform: scale(1.08) translateY(-2px);
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 -3px 5px rgba(0,0,0,.3) inset, 0 14px 24px -10px rgba(27,48,79,.5);
 }
 
 /* Barra de acento no topo do card — dá presença de cor sem pesar */
@@ -291,33 +362,83 @@ details[open] .faq-plus { transform: rotate(45deg); }
 /* ── Mobile: títulos centralizados e quebras de texto limpas ───────────── */
 @media (max-width: 700px) {
   .sec-eyebrow, .sec-title, .mobile-center { text-align: center; }
-  .problem-item { grid-template-columns: 1fr !important; justify-items: center; text-align: center; }
-  .problem-item p { text-align: left; }
   .deco-line { display: none; }
 }
 .sec-title, h1, h2, h3 { text-wrap: balance; }
 
-/* ── Carrossel infinito de portfólio ─────────────────────────────────── */
-.pf-marquee {
+/* Linha de CTAs/ações que deve ficar centralizada no mobile mesmo quando o
+   bloco ao redor é alinhado à esquerda no desktop. */
+@media (max-width: 700px) {
+  .mobile-center-row { justify-content: center; text-align: center; }
+}
+
+/* ── Faixa de destaques (stats) em carrossel infinito, 100% CSS ───────── */
+.stats-marquee {
   overflow: hidden;
   -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
   mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
 }
-.pf-track {
+.stats-track {
   display: flex;
-  gap: 20px;
+  align-items: center;
+  gap: clamp(28px, 4vw, 56px);
   width: max-content;
-  animation: pf-scroll 46s linear infinite;
+  padding: clamp(22px, 2.6vw, 28px) clamp(24px, 3.4vw, 40px);
+  animation: stats-scroll 32s linear infinite;
 }
-.pf-marquee:hover .pf-track,
-.pf-marquee:focus-within .pf-track {
+.stats-marquee:hover .stats-track,
+.stats-marquee:focus-within .stats-track {
   animation-play-state: paused;
 }
-@keyframes pf-scroll {
+@keyframes stats-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
 }
-.pf-card { flex: 0 0 auto; width: min(76vw, 300px); overflow: hidden; }
+.stats-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  font-size: .82rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--navy);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stats-track { animation: none; }
+}
+
+/* ── Portfólio: carrossel "coverflow" — card central em foco, vizinhos
+   desfocados nas laterais, transição lenta e luxuosa ────────────────── */
+.pf-stage {
+  position: relative;
+  height: clamp(340px, 54vw, 480px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pf-slides {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.pf-slide {
+  --delta: 0;
+  --scale: 1;
+  --op: 1;
+  --blur: 0px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(80vw, 380px);
+  transform: translate(calc(-50% + var(--delta) * 62%), -50%) scale(var(--scale));
+  opacity: var(--op);
+  filter: blur(var(--blur));
+  transition: transform 1.05s var(--ease-lux), opacity 1.05s var(--ease-lux), filter 1.05s var(--ease-lux);
+}
+.pf-slide-card { overflow: hidden; }
+.pf-slide-caption { font-size: .96rem; font-weight: 700; color: var(--navy); margin: 0; padding: 16px 18px; }
 .pf-badge {
   position: absolute;
   top: 12px;
@@ -333,8 +454,34 @@ details[open] .faq-plus { transform: rotate(45deg); }
   border-radius: 20px;
   box-shadow: 0 6px 14px -4px rgba(27,48,79,.35);
 }
+.pf-stage-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 20;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 10px 22px -8px rgba(27,48,79,.35);
+  transition: border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+}
+.pf-stage-arrow:hover { border-color: var(--gold); transform: translateY(-50%) scale(1.1); box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 18px 32px -10px rgba(27,48,79,.45); }
+.pf-stage-arrow-prev { left: clamp(4px, 3vw, 24px); }
+.pf-stage-arrow-next { right: clamp(4px, 3vw, 24px); }
+@media (max-width: 640px) {
+  .pf-stage-arrow { width: 40px; height: 40px; }
+  .pf-stage-arrow-prev { left: 4px; }
+  .pf-stage-arrow-next { right: 4px; }
+}
 @media (prefers-reduced-motion: reduce) {
-  .pf-track { animation: none; }
+  .pf-slide { transition: none; }
 }
 
 /* Botão circular reutilizado pelos controles de depoimentos */
@@ -357,6 +504,61 @@ details[open] .faq-plus { transform: rotate(45deg); }
   z-index: 2;
 }
 .pf-arrow:hover { border-color: var(--gold); box-shadow: 0 14px 30px -10px rgba(27,48,79,.4); }
+
+/* ── "O problema": linha do tempo que se preenche de dourado conforme a
+   leitura avança, e os números 01-04 trocam de dourado para azul-marinho
+   assim que são "lidos" (cruzam a linha de referência na tela). ────────── */
+.problem-timeline {
+  position: relative;
+  padding-left: clamp(14px, 2.4vw, 22px);
+}
+.problem-line-track {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--border);
+}
+.problem-line-fill {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 3px;
+  height: 0%;
+  border-radius: 3px;
+  background: linear-gradient(180deg, var(--gold), var(--gold-text));
+  box-shadow: 0 0 12px rgba(180,149,94,.55);
+  transition: height .12s linear;
+}
+.problem-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: clamp(18px, 3vw, 34px);
+  align-items: start;
+}
+.problem-num {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(2.4rem, 5.4vw, 4rem);
+  line-height: .9;
+  font-weight: 500;
+  color: var(--gold);
+  transition: color .5s var(--ease-lux), text-shadow .5s var(--ease-lux);
+  text-shadow: 0 2px 0 rgba(255,255,255,.6);
+}
+.problem-num.is-passed {
+  color: var(--navy);
+  text-shadow: 0 2px 10px rgba(27,48,79,.18);
+}
+@media (max-width: 700px) {
+  .problem-item { gap: clamp(12px, 4vw, 20px); }
+  .problem-num { font-size: clamp(2rem, 9vw, 2.6rem); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .problem-line-fill { transition: none; }
+  .problem-num { transition: none; }
+}
 
 /* ── Depoimentos: cards compactos e paginados (3 por vez) ────────────── */
 .testi-wrap { position: relative; }
