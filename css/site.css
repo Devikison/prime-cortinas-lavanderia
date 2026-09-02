@@ -12,7 +12,7 @@
   --surface: #F7F6F3;
   --border: #E6E3DC;
   --text: #1B304F;
-  --text-muted: #5A6577;
+  --text-muted: #222222;
   /* curva de desaceleração suave — a base do motion "devagar e elegante" */
   --ease-lux: cubic-bezier(.16,1,.3,1);
   --dur-slow: .65s;
@@ -439,7 +439,7 @@ summary::-webkit-details-marker { display: none; }
   box-sizing: border-box;
   background: #F7F6F3;
   border: 1.5px dashed rgba(27,48,79,.3);
-  color: #5A6577;
+  color: #222222;
 }
 .img-placeholder svg { opacity: .45; flex: none; }
 .img-placeholder span { font-size: 13px; line-height: 1.4; max-width: 88%; }
