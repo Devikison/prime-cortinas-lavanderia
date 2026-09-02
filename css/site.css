@@ -298,7 +298,31 @@ summary::-webkit-details-marker { display: none; }
 .btn-primary, .btn-dark, .btn-footer, .btn-outline, .btn-cookie-allow, .btn-cookie-deny, #wa-fab {
   position: relative;
   isolation: isolate;
+  overflow: hidden;
 }
+/* Brilho que desliza pela superfície do botão ao passar o mouse — o
+   "toque a mais" luxuoso pedido para todos os botões do site. */
+.btn-primary::after, .btn-dark::after, .btn-footer::after, .btn-outline::after {
+  content: "";
+  position: absolute;
+  top: -20%;
+  left: -60%;
+  width: 35%;
+  height: 140%;
+  background: linear-gradient(115deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.55) 50%, rgba(255,255,255,0) 100%);
+  transform: skewX(-18deg);
+  transition: left .85s var(--ease-lux);
+  pointer-events: none;
+  z-index: 3;
+}
+.btn-primary:hover::after, .btn-dark:hover::after, .btn-footer:hover::after, .btn-outline:hover::after { left: 130%; }
+@media (prefers-reduced-motion: reduce) {
+  .btn-primary::after, .btn-dark::after, .btn-footer::after, .btn-outline::after { display: none; }
+}
+
+/* Botão dourado (usado na hero mobile, sobre fundo escuro) — mantém o
+   tom quente no hover em vez de virar azul e sumir contra o painel. */
+.btn-gold:hover { background: linear-gradient(180deg,#EA8F0E,#C97400) !important; }
 .btn-primary::before, .btn-dark::before, .btn-footer::before, .btn-outline::before,
 .btn-cookie-allow::before, .btn-cookie-deny::before, #wa-fab::before {
   content: "";
