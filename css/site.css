@@ -352,24 +352,40 @@ summary::-webkit-details-marker { display: none; }
 
 .link-gold:hover { color: #B4955E; }
 
-/* Ícones circulares de redes sociais no rodapé */
-.footer-social-icon {
+/* Botões de redes sociais no rodapé — cores oficiais de cada marca, com
+   relevo 3D (brilho no topo + sombra em camadas) para o toque luxuoso. */
+.social-btn {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
-  border: 1px solid rgba(180,149,94,.5);
-  color: #fff;
-  transition: background var(--dur-med) var(--ease-lux), border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux);
+  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 4px rgba(0,0,0,.18) inset, 0 8px 16px -6px rgba(0,0,0,.4);
+  transition: transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
 }
-.footer-social-icon:hover {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: #142540;
-  transform: translateY(-2px);
+.social-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0) 48%, rgba(0,0,0,.08) 100%);
+  pointer-events: none;
 }
+.social-btn:hover {
+  transform: translateY(-3px) scale(1.06);
+  box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 -2px 4px rgba(0,0,0,.2) inset, 0 16px 26px -8px rgba(0,0,0,.48);
+}
+.social-btn:active { transform: translateY(-1px) scale(1.02); }
+
+.social-btn-instagram {
+  background: radial-gradient(120% 130% at 24% 112%, #fdf497 0%, #fdf497 8%, #fd5949 38%, #d6249f 58%, #285AEB 92%);
+}
+.social-btn-whatsapp { background: radial-gradient(120% 120% at 30% 20%, #35d573, #22b959 65%, #1a9e4b 100%); }
+.social-btn-facebook { background: radial-gradient(120% 120% at 30% 20%, #3b82f6, #1657c4 100%); }
 
 /* Botão flutuante do WhatsApp — sempre visível, em qualquer tela, do
    carregamento da página até o fim da rolagem. Relevo 3D acentuado e
