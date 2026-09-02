@@ -464,10 +464,8 @@ summary::-webkit-details-marker { display: none; }
 .hero-mobile { display: none; }
 @media (max-width: 760px) {
   .hero-desktop { display: none; }
-  .hero-mobile { display: flex; }
+  .hero-mobile { display: block; }
 }
-.hero-mobile-content { display: flex; flex-direction: column; height: 100%; }
-.hero-mobile-spacer { flex: 1 1 auto; min-height: 20px; }
 
 /* ── "O que está incluído": grade fechada em 3 colunas (2 linhas exatas),
    sem sobra de espaço ou card órfão numa linha ─────────────────────── */
