@@ -206,7 +206,12 @@
           if (other !== card && other.classList.contains('is-open')) faqClose(other);
         });
         card.open = true;
-        requestAnimationFrame(function () { card.classList.add('is-open'); });
+        var panel = card.querySelector('.faq-panel');
+        // Força o navegador a computar o layout com grid-template-rows:0fr
+        // antes de aplicar a classe — sem isto, o navegador pode juntar as
+        // duas mudanças no mesmo frame e a transição não roda.
+        if (panel) void panel.offsetHeight;
+        card.classList.add('is-open');
       }
       faqCards.forEach(function (card) {
         var summary = card.querySelector('.faq-summary');
