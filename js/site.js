@@ -193,8 +193,13 @@
         var panel = card.querySelector('.faq-panel');
         card.classList.remove('is-open');
         if (faqReduce || !panel) { card.open = false; return; }
+        // Trava a altura atual em px (caso esteja em "auto") antes de
+        // animar para 0 — animar direto de "auto" não funciona em CSS.
+        panel.style.height = panel.getBoundingClientRect().height + 'px';
+        void panel.offsetHeight;
+        panel.style.height = '0px';
         var onEnd = function (ev) {
-          if (ev.target !== panel) return;
+          if (ev.propertyName !== 'height') return;
           panel.removeEventListener('transitionend', onEnd);
           card.open = false;
         };
@@ -206,12 +211,21 @@
           if (other !== card && other.classList.contains('is-open')) faqClose(other);
         });
         card.open = true;
-        var panel = card.querySelector('.faq-panel');
-        // Força o navegador a computar o layout com grid-template-rows:0fr
-        // antes de aplicar a classe — sem isto, o navegador pode juntar as
-        // duas mudanças no mesmo frame e a transição não roda.
-        if (panel) void panel.offsetHeight;
         card.classList.add('is-open');
+        var panel = card.querySelector('.faq-panel');
+        if (!panel) return;
+        if (faqReduce) { panel.style.height = 'auto'; return; }
+        var target = panel.scrollHeight;
+        panel.style.height = '0px';
+        void panel.offsetHeight;
+        panel.style.height = target + 'px';
+        var onEnd = function (ev) {
+          if (ev.propertyName !== 'height') return;
+          panel.removeEventListener('transitionend', onEnd);
+          // Volta para "auto" para respeitar reflow (ex.: rotação de tela).
+          panel.style.height = 'auto';
+        };
+        panel.addEventListener('transitionend', onEnd);
       }
       faqCards.forEach(function (card) {
         var summary = card.querySelector('.faq-summary');

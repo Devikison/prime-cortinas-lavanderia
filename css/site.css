@@ -95,15 +95,15 @@ summary::-webkit-details-marker { display: none; }
 }
 .faq-card.is-open .faq-plus { transform: rotate(45deg); }
 
-/* Truque do grid-template-rows animável, com abertura E fechamento
-   controlados por classe via JS (o atributo nativo [open] some antes
-   da transição rodar, o que fazia o fechamento parecer brusco). */
+/* Altura animada via JS (height em px, não grid-template-rows) — mais
+   robusto entre navegadores do que o truque de grid-rows, e permite
+   abrir E fechar com a mesma transição (o atributo nativo [open] some
+   antes da transição rodar, o que fazia o fechamento parecer brusco). */
 .faq-panel {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows .6s var(--ease-lux);
+  height: 0;
+  overflow: hidden;
+  transition: height .6s var(--ease-lux);
 }
-.faq-card.is-open .faq-panel { grid-template-rows: 1fr; }
 .faq-panel-inner {
   overflow: hidden;
   background: linear-gradient(180deg, rgba(234,143,14,.16), rgba(234,143,14,.05));
