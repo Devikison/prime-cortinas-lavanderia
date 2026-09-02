@@ -581,6 +581,12 @@ summary::-webkit-details-marker { display: none; }
   filter: blur(var(--blur));
   transition: transform 1.05s var(--ease-lux), opacity 1.05s var(--ease-lux), filter 1.05s var(--ease-lux);
 }
+@media (min-width: 900px) {
+  /* Cards maiores no desktop, como pedido — a foto real deve ter pelo
+     menos 1400x1050px (proporção 4:3) para não esticar. */
+  .pf-stage { height: clamp(460px, 42vw, 620px); }
+  .pf-slide { width: min(38vw, 520px); }
+}
 .pf-slide-card { overflow: hidden; }
 .pf-slide-caption { font-size: .96rem; font-weight: 700; color: var(--navy); margin: 0; padding: 16px 18px; }
 .pf-badge {
