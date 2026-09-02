@@ -67,7 +67,7 @@ summary::-webkit-details-marker { display: none; }
   border-color: rgba(234,143,14,.45);
   box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 24px 46px -26px rgba(27,48,79,.26);
 }
-.faq-card[open] {
+.faq-card.is-open {
   border-color: rgba(234,143,14,.55);
   box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 24px 46px -26px rgba(27,48,79,.22);
 }
@@ -85,7 +85,7 @@ summary::-webkit-details-marker { display: none; }
   transition: color var(--dur-slow) var(--ease-lux);
 }
 .faq-card:hover .faq-summary,
-.faq-card[open] .faq-summary { color: var(--gold-text); }
+.faq-card.is-open .faq-summary { color: var(--gold-text); }
 .faq-plus {
   flex: none;
   color: var(--gold);
@@ -93,15 +93,17 @@ summary::-webkit-details-marker { display: none; }
   line-height: 1;
   transition: transform var(--dur-slow) var(--ease-lux) !important;
 }
-.faq-card[open] .faq-plus { transform: rotate(45deg); }
+.faq-card.is-open .faq-plus { transform: rotate(45deg); }
 
-/* Truque do grid-template-rows animável: abre/fecha suavemente sem JS. */
+/* Truque do grid-template-rows animável, com abertura E fechamento
+   controlados por classe via JS (o atributo nativo [open] some antes
+   da transição rodar, o que fazia o fechamento parecer brusco). */
 .faq-panel {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows .7s var(--ease-lux);
+  transition: grid-template-rows .6s var(--ease-lux);
 }
-.faq-card[open] .faq-panel { grid-template-rows: 1fr; }
+.faq-card.is-open .faq-panel { grid-template-rows: 1fr; }
 .faq-panel-inner {
   overflow: hidden;
   background: linear-gradient(180deg, rgba(234,143,14,.16), rgba(234,143,14,.05));

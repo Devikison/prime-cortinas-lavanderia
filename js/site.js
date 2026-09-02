@@ -181,6 +181,44 @@
     initTimelineFill('problem-timeline', 'problem-line-fill', '.problem-num', 'vertical');
     initTimelineFill('steps-timeline', 'steps-line-fill', '.step-num', 'responsive');
 
+    // ---- FAQ: abre e fecha com a mesma transição suave nos dois sentidos.
+    // O atributo nativo [open] do <details> some assim que o clique fecha
+    // o card, então a transição CSS nunca chegava a rodar no fechamento.
+    // Aqui a classe .is-open controla a animação, e o atributo [open] só
+    // é removido depois que a transição termina. ----
+    var faqCards = Array.prototype.slice.call(document.querySelectorAll('.faq-card'));
+    if (faqCards.length) {
+      var faqReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      function faqClose(card) {
+        var panel = card.querySelector('.faq-panel');
+        card.classList.remove('is-open');
+        if (faqReduce || !panel) { card.open = false; return; }
+        var onEnd = function (ev) {
+          if (ev.target !== panel) return;
+          panel.removeEventListener('transitionend', onEnd);
+          card.open = false;
+        };
+        panel.addEventListener('transitionend', onEnd);
+      }
+      function faqOpen(card) {
+        // Só um card aberto por vez (mesmo comportamento do name="faq-prime" nativo).
+        faqCards.forEach(function (other) {
+          if (other !== card && other.classList.contains('is-open')) faqClose(other);
+        });
+        card.open = true;
+        requestAnimationFrame(function () { card.classList.add('is-open'); });
+      }
+      faqCards.forEach(function (card) {
+        var summary = card.querySelector('.faq-summary');
+        if (!summary) return;
+        summary.addEventListener('click', function (e) {
+          e.preventDefault();
+          if (card.classList.contains('is-open')) faqClose(card);
+          else faqOpen(card);
+        });
+      });
+    }
+
     // ---- Barra de consentimento de cookies ----
     var bar = document.getElementById('cookie-bar');
     if (bar) {
