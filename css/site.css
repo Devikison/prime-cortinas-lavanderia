@@ -352,6 +352,25 @@ summary::-webkit-details-marker { display: none; }
 
 .link-gold:hover { color: #B4955E; }
 
+/* Ícones circulares de redes sociais no rodapé */
+.footer-social-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(180,149,94,.5);
+  color: #fff;
+  transition: background var(--dur-med) var(--ease-lux), border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux);
+}
+.footer-social-icon:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #142540;
+  transform: translateY(-2px);
+}
+
 /* Botão flutuante do WhatsApp — sempre visível, em qualquer tela, do
    carregamento da página até o fim da rolagem. Relevo 3D acentuado e
    anel dourado para reforçar o toque luxuoso; ícone verde WhatsApp para
