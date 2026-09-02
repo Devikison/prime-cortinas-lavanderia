@@ -352,8 +352,9 @@ summary::-webkit-details-marker { display: none; }
 
 .link-gold:hover { color: #B4955E; }
 
-/* Botões de redes sociais no rodapé — cores oficiais de cada marca, com
-   relevo 3D (brilho no topo + sombra em camadas) para o toque luxuoso. */
+/* Botões de redes sociais no rodapé — dourado com relevo 3D leve, no
+   mesmo estilo dos ícones do resto do site, ficando azul-marinho ao
+   passar o mouse. */
 .social-btn {
   position: relative;
   isolation: isolate;
@@ -363,8 +364,9 @@ summary::-webkit-details-marker { display: none; }
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 4px rgba(0,0,0,.18) inset, 0 8px 16px -6px rgba(0,0,0,.4);
-  transition: transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+  background: var(--gold);
+  box-shadow: 0 1px 0 rgba(255,255,255,.5) inset, 0 -3px 5px rgba(90,68,20,.35) inset, 0 8px 16px -8px rgba(27,48,79,.45);
+  transition: background var(--dur-slow) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
 }
 .social-btn::before {
   content: "";
@@ -376,16 +378,11 @@ summary::-webkit-details-marker { display: none; }
   pointer-events: none;
 }
 .social-btn:hover {
+  background: var(--navy);
   transform: translateY(-3px) scale(1.06);
-  box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 -2px 4px rgba(0,0,0,.2) inset, 0 16px 26px -8px rgba(0,0,0,.48);
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 -3px 5px rgba(0,0,0,.3) inset, 0 16px 26px -8px rgba(0,0,0,.48);
 }
 .social-btn:active { transform: translateY(-1px) scale(1.02); }
-
-.social-btn-instagram {
-  background: radial-gradient(120% 130% at 24% 112%, #fdf497 0%, #fdf497 8%, #fd5949 38%, #d6249f 58%, #285AEB 92%);
-}
-.social-btn-whatsapp { background: radial-gradient(120% 120% at 30% 20%, #35d573, #22b959 65%, #1a9e4b 100%); }
-.social-btn-facebook { background: radial-gradient(120% 120% at 30% 20%, #3b82f6, #1657c4 100%); }
 
 /* Botão flutuante do WhatsApp — sempre visível, em qualquer tela, do
    carregamento da página até o fim da rolagem. Relevo 3D acentuado e
