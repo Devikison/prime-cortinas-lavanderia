@@ -22,6 +22,29 @@
 html {
   overflow-x: hidden;
 }
+
+/* Barra de rolagem lateral no azul-marinho da marca, com o mesmo relevo
+   dourado no hover que os botões usam — combina com o resto do site em
+   vez da barra cinza padrão do navegador. */
+html {
+  scrollbar-width: auto;
+  scrollbar-color: var(--navy) var(--surface);
+}
+::-webkit-scrollbar {
+  width: 18px;
+}
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--navy), var(--navy-deep));
+  border-radius: 20px;
+  border: 4px solid var(--surface);
+  box-shadow: 0 1px 0 rgba(255,255,255,.25) inset;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--gold), #C97400);
+}
 body {
   margin: 0;
   background: #FFFFFF;
