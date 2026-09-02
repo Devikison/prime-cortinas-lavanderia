@@ -6,8 +6,8 @@
 :root {
   --navy: #1B304F;
   --navy-deep: #142540;
-  --gold: #B4955E;
-  --gold-text: #8A6F3E;
+  --gold: #EA8F0E;
+  --gold-text: #B8710A;
   --bg: #FFFFFF;
   --surface: #F7F6F3;
   --border: #E6E3DC;
@@ -42,11 +42,11 @@ body::before {
   background-image:
     repeating-linear-gradient(90deg, rgba(27,48,79,.055) 0 1px, rgba(27,48,79,0) 1px 4px, rgba(27,48,79,.022) 4px 5px, rgba(27,48,79,0) 5px 34px),
     repeating-linear-gradient(90deg, rgba(27,48,79,.03) 0 18px, rgba(27,48,79,0) 18px 96px),
-    radial-gradient(120% 55% at 50% -10%, rgba(180,149,94,.10), rgba(255,255,255,0) 62%);
+    radial-gradient(120% 55% at 50% -10%, rgba(234,143,14,.10), rgba(255,255,255,0) 62%);
 }
 
-a { color: #1B304F; text-decoration-color: rgba(180,149,94,.55); text-underline-offset: 3px; transition: color var(--dur-med) var(--ease-lux); }
-a:hover { color: #8A6F3E; }
+a { color: #1B304F; text-decoration-color: rgba(234,143,14,.55); text-underline-offset: 3px; transition: color var(--dur-med) var(--ease-lux); }
+a:hover { color: #B8710A; }
 
 /* FAQ — cards com leve relevo 3D, abertura lenta e luxuosa (CSS Grid
    animatable rows) e interior dourado da marca quando aberto. */
@@ -64,11 +64,11 @@ summary::-webkit-details-marker { display: none; }
 }
 .faq-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(180,149,94,.45);
+  border-color: rgba(234,143,14,.45);
   box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 24px 46px -26px rgba(27,48,79,.26);
 }
 .faq-card[open] {
-  border-color: rgba(180,149,94,.55);
+  border-color: rgba(234,143,14,.55);
   box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 24px 46px -26px rgba(27,48,79,.22);
 }
 .faq-summary {
@@ -104,7 +104,7 @@ summary::-webkit-details-marker { display: none; }
 .faq-card[open] .faq-panel { grid-template-rows: 1fr; }
 .faq-panel-inner {
   overflow: hidden;
-  background: linear-gradient(180deg, rgba(180,149,94,.16), rgba(180,149,94,.05));
+  background: linear-gradient(180deg, rgba(234,143,14,.16), rgba(234,143,14,.05));
   transition: background .7s var(--ease-lux);
 }
 .faq-answer {
@@ -135,7 +135,7 @@ summary::-webkit-details-marker { display: none; }
 .pc-card:hover {
   transform: translateY(-8px);
   box-shadow: 0 34px 64px -26px rgba(27,48,79,.28), 0 6px 18px rgba(27,48,79,.08);
-  border-color: rgba(180,149,94,.5);
+  border-color: rgba(234,143,14,.5);
 }
 
 .pc-card-dark {
@@ -169,8 +169,8 @@ summary::-webkit-details-marker { display: none; }
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(180,149,94,.08);
-  border: 1px solid rgba(180,149,94,.32);
+  background: rgba(234,143,14,.08);
+  border: 1px solid rgba(234,143,14,.32);
   box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 -2px 3px rgba(27,48,79,.08) inset, 0 6px 14px -8px rgba(27,48,79,.35);
   transition: background var(--dur-slow) var(--ease-lux),
               border-color var(--dur-slow) var(--ease-lux),
@@ -178,18 +178,18 @@ summary::-webkit-details-marker { display: none; }
               transform var(--dur-slow) var(--ease-lux);
 }
 .pc-card:hover .pc-icon-badge {
-  background: rgba(180,149,94,.16);
-  border-color: rgba(180,149,94,.6);
+  background: rgba(234,143,14,.16);
+  border-color: rgba(234,143,14,.6);
   transform: scale(1.08) translateY(-2px);
   box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 -2px 3px rgba(27,48,79,.1) inset, 0 14px 22px -10px rgba(27,48,79,.4);
 }
 .pc-icon-badge-light {
   background: rgba(255,255,255,.06);
-  border-color: rgba(180,149,94,.45);
+  border-color: rgba(234,143,14,.45);
   box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 -2px 3px rgba(0,0,0,.2) inset, 0 6px 14px -8px rgba(0,0,0,.4);
 }
 .pc-card-dark:hover .pc-icon-badge-light {
-  background: rgba(180,149,94,.18);
+  background: rgba(234,143,14,.18);
   border-color: var(--gold);
 }
 
@@ -235,7 +235,7 @@ summary::-webkit-details-marker { display: none; }
   width: 0;
   height: 1px;
   background: linear-gradient(90deg, var(--gold), var(--gold-text));
-  box-shadow: 0 0 12px rgba(180,149,94,.45);
+  box-shadow: 0 0 12px rgba(234,143,14,.45);
   transition: width .12s linear;
 }
 .step-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
@@ -339,10 +339,10 @@ summary::-webkit-details-marker { display: none; }
   box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 4px 10px -6px rgba(27,48,79,.12);
   transition: border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
 }
-.btn-outline:hover { border-color: #B4955E; transform: translateY(-3px); box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 18px 32px -16px rgba(27,48,79,.24); }
+.btn-outline:hover { border-color: #EA8F0E; transform: translateY(-3px); box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 18px 32px -16px rgba(27,48,79,.24); }
 
 .btn-cookie-deny { transition: border-color var(--dur-med) var(--ease-lux); }
-.btn-cookie-deny:hover { border-color: #B4955E; }
+.btn-cookie-deny:hover { border-color: #EA8F0E; }
 
 .btn-cookie-allow {
   box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 8px 18px -10px rgba(27,48,79,.4);
@@ -350,7 +350,7 @@ summary::-webkit-details-marker { display: none; }
 }
 .btn-cookie-allow:hover { background: #142540; }
 
-.link-gold:hover { color: #B4955E; }
+.link-gold:hover { color: #EA8F0E; }
 
 /* Botões de redes sociais no rodapé — dourado com relevo 3D leve, no
    mesmo estilo dos ícones do resto do site, ficando azul-marinho ao
@@ -411,7 +411,7 @@ summary::-webkit-details-marker { display: none; }
   position: absolute;
   inset: -6px;
   border-radius: 50%;
-  border: 1.5px solid rgba(180,149,94,.6);
+  border: 1.5px solid rgba(234,143,14,.6);
   animation: wa-pulse 2.6s var(--ease-lux) infinite;
   pointer-events: none;
 }
@@ -674,7 +674,7 @@ summary::-webkit-details-marker { display: none; }
   height: 0%;
   border-radius: 2px;
   background: linear-gradient(180deg, var(--gold), var(--gold-text));
-  box-shadow: 0 0 12px rgba(180,149,94,.55);
+  box-shadow: 0 0 12px rgba(234,143,14,.55);
   transition: height .12s linear;
 }
 .problem-item {
@@ -697,7 +697,7 @@ summary::-webkit-details-marker { display: none; }
   justify-content: center;
   border-radius: 50%;
   background: #fff;
-  border: 1px solid rgba(180,149,94,.45);
+  border: 1px solid rgba(234,143,14,.45);
   box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 -2px 3px rgba(27,48,79,.08) inset, 0 6px 14px -8px rgba(27,48,79,.35);
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 1.05rem;
