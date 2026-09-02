@@ -297,10 +297,16 @@ summary::-webkit-details-marker { display: none; }
 /* Botões e links com hover — motion lento e com elevação, com um leve
    relevo 3D (brilho no topo + sombra interna na base) que dá o toque
    luxuoso sem alterar as cores de fundo definidas inline. */
-.btn-primary, .btn-dark, .btn-footer, .btn-outline, .btn-cookie-allow, .btn-cookie-deny, #wa-fab {
+.btn-primary, .btn-dark, .btn-footer, .btn-outline, .btn-cookie-allow, .btn-cookie-deny {
   position: relative;
   isolation: isolate;
   overflow: hidden;
+}
+/* #wa-fab fica de fora do overflow:hidden acima: o anel pulsante (::after,
+   mais abaixo) precisa se expandir para fora do círculo do botão. */
+#wa-fab {
+  position: relative;
+  isolation: isolate;
 }
 /* Brilho que desliza pela superfície do botão ao passar o mouse — o
    "toque a mais" luxuoso pedido para todos os botões do site. */
