@@ -771,6 +771,19 @@ summary::-webkit-details-marker { display: none; }
   .sec-eyebrow, .sec-title, .mobile-center { text-align: center; }
 }
 .sec-title, h1, h2, h3 { text-wrap: balance; }
+/* Mobile: nenhum título deve ter uma largura em "ch" mais estreita que a
+   tela — isso é o que forçava quebras feias (às vezes no meio da
+   palavra) nos títulos que ganharam max-width em ch para controlar a
+   quebra no desktop. No celular eles usam a largura inteira disponível,
+   com uma quebra mais inteligente que evita deixar palavra solta. */
+@media (max-width: 760px) {
+  h1, h2, .sec-title {
+    max-width: none !important;
+    text-wrap: pretty;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+}
 
 /* Quebra de linha manual só pra desktop, em títulos onde o cliente pediu
    uma quebra específica (em vez de deixar o balanceamento automático do
