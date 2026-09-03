@@ -114,6 +114,17 @@
           });
         }, { rootMargin: '0px 0px -6% 0px', threshold: 0.04 });
         reveals.forEach(function (el) { io.observe(el); });
+        // Rede de segurança: se por qualquer motivo o navegador nunca disparar
+        // o IntersectionObserver para algum elemento (ex.: aba que carrega em
+        // segundo plano, alguma peculiaridade de navegador específico), o
+        // conteúdo não pode ficar preso semitransparente para sempre — depois
+        // de 2,5s tudo que ainda não apareceu é revelado à força.
+        setTimeout(function () {
+          reveals.forEach(function (el) {
+            if (!el.classList.contains('is-visible')) el.classList.add('is-visible');
+          });
+          io.disconnect();
+        }, 2500);
       }
     }
 
