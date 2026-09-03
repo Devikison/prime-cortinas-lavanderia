@@ -783,6 +783,19 @@ summary::-webkit-details-marker { display: none; }
     overflow-wrap: normal;
     word-break: normal;
   }
+  /* Fonte um pouco menor e padronizada em todos os títulos de seção no
+     mobile — cabem em 2-3 linhas de forma consistente, em vez de cada
+     título ter seu próprio tamanho "grande demais para a tela". O hero
+     (maior, de propósito) tem seu próprio teto, levemente acima dos
+     demais. */
+  .sec-title, h2 {
+    font-size: clamp(1.55rem, 6vw, 2.05rem) !important;
+    line-height: 1.25 !important;
+  }
+  .hero-mobile h1 {
+    font-size: clamp(2rem, 8.5vw, 2.6rem) !important;
+    line-height: 1.15 !important;
+  }
 }
 
 /* Quebra de linha manual só pra desktop, em títulos onde o cliente pediu
