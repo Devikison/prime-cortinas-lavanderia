@@ -1268,11 +1268,9 @@ summary::-webkit-details-marker { display: none; }
     gap: 12px;
   }
   .solution-text { text-align: left; padding-top: 0; }
-  .solution-quote {
-    border-left: none;
-    padding-left: 0;
-    text-align: center;
-  }
+  /* Fica alinhada à esquerda, do ladinho da régua dourada — não
+     centralizada como o resto da coluna. */
+  .solution-quote { text-align: left; }
 }
 
 /* ── Cards de benefícios com miniatura de foto acima do ícone ──────────── */
