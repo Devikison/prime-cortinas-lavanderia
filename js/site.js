@@ -67,6 +67,37 @@
       onScroll();
     }
 
+    // ---- Menu mobile: hambúrguer que vira "X" e abre a lista de links
+    // devagar (mesmo motion do resto do site). Fecha ao clicar num link,
+    // ao clicar fora, ou com Esc. ----
+    var navToggle = document.getElementById('nav-toggle');
+    var navLinks = document.getElementById('nav-links');
+    if (navToggle && navLinks) {
+      function setNavOpen(open) {
+        navToggle.classList.toggle('is-open', open);
+        navLinks.classList.toggle('is-open', open);
+        navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+        navToggle.setAttribute('aria-label', open ? 'Fechar menu' : 'Abrir menu');
+      }
+      navToggle.addEventListener('click', function () {
+        setNavOpen(!navToggle.classList.contains('is-open'));
+      });
+      navLinks.querySelectorAll('a').forEach(function (link) {
+        link.addEventListener('click', function () { setNavOpen(false); });
+      });
+      document.addEventListener('click', function (e) {
+        if (!navToggle.classList.contains('is-open')) return;
+        if (navLinks.contains(e.target) || navToggle.contains(e.target)) return;
+        setNavOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') setNavOpen(false);
+      });
+      window.addEventListener('resize', function () {
+        if (window.innerWidth > 900) setNavOpen(false);
+      });
+    }
+
     // ---- Revelação suave das seções ao entrar na tela ----
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var reveals = Array.prototype.slice.call(document.querySelectorAll('[data-reveal]'));
@@ -86,9 +117,9 @@
       }
     }
 
-    // ---- Carrossel "coverflow" reutilizável — card central em foco,
+    // ---- Carrossel "coverflow" do Portfólio — card central em foco,
     // vizinhos desfocados nas laterais, transição lenta via setas ou
-    // arraste. Usado no Portfólio e na Prova social. ----
+    // arraste (mouse ou dedo). ----
     function initCoverflow(stageId, slideClass, prevId, nextId) {
       var stage = document.getElementById(stageId);
       if (!stage) return;
@@ -123,23 +154,194 @@
       if (prevBtn) prevBtn.addEventListener('click', function () { current = (current - 1 + n) % n; render(); });
       if (nextBtn) nextBtn.addEventListener('click', function () { current = (current + 1) % n; render(); });
 
-      // Arraste/toque para passar no celular
-      var touchX = null;
-      stage.addEventListener('touchstart', function (e) { touchX = e.touches[0].clientX; }, { passive: true });
-      stage.addEventListener('touchend', function (e) {
-        if (touchX === null) return;
-        var dx = e.changedTouches[0].clientX - touchX;
+      // Arraste com mouse ou dedo (pointer events cobrem os dois)
+      var dragging = false;
+      var startX = 0;
+      stage.addEventListener('pointerdown', function (e) { dragging = true; startX = e.clientX; stage.setPointerCapture(e.pointerId); });
+      stage.addEventListener('pointerup', function (e) {
+        if (!dragging) return;
+        dragging = false;
+        var dx = e.clientX - startX;
         if (Math.abs(dx) > 40) {
           current = dx < 0 ? (current + 1) % n : (current - 1 + n) % n;
           render();
         }
-        touchX = null;
       });
+      stage.addEventListener('pointercancel', function () { dragging = false; });
 
       render();
     }
     initCoverflow('pf-stage', 'pf-slide', 'pf-prev', 'pf-next');
-    initCoverflow('testi-stage', 'testi-slide', 'testi-prev', 'testi-next');
+
+    // ---- Faixa de depoimentos: auto-scroll contínuo (nunca pausa no
+    // hover) que pode ser arrastado livremente com o mouse ou o dedo. O
+    // arraste só desloca a posição; o auto-scroll retoma sozinho a seguir. ----
+    function initDragMarquee(trackId, speed) {
+      var track = document.getElementById(trackId);
+      if (!track) return;
+      var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var pos = 0;
+      var dragging = false;
+      var startX = 0;
+      var startPos = 0;
+      var half = track.scrollWidth / 2;
+      window.addEventListener('resize', function () { half = track.scrollWidth / 2; });
+
+      function frame() {
+        if (!dragging && !reduceMotion) {
+          pos -= speed;
+        }
+        if (half > 0) {
+          if (pos <= -half) pos += half;
+          if (pos > 0) pos -= half;
+        }
+        track.style.transform = 'translateX(' + pos + 'px)';
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      track.addEventListener('pointerdown', function (e) {
+        dragging = true;
+        startX = e.clientX;
+        startPos = pos;
+        track.setPointerCapture(e.pointerId);
+      });
+      track.addEventListener('pointermove', function (e) {
+        if (!dragging) return;
+        pos = startPos + (e.clientX - startX);
+      });
+      function stopDrag() { dragging = false; }
+      track.addEventListener('pointerup', stopDrag);
+      track.addEventListener('pointercancel', stopDrag);
+      track.addEventListener('pointerleave', function () { if (dragging) stopDrag(); });
+    }
+    initDragMarquee('testi-track', 0.5);
+
+    // ---- "O que está incluído" no mobile: pilha compacta e de altura fixa.
+    // Só o card da frente e uma lasca do próximo (atrás, mais baixo e
+    // apagado) ficam visíveis; arrastar o dedo pra cima troca o da frente
+    // pelo de trás, em loop infinito (do último volta pro primeiro). No
+    // desktop a grade normal (CSS grid) segue intacta — este script só
+    // tem efeito visual dentro da media query mobile do site.css. ----
+    function initVerticalStack(containerId, itemSelector) {
+      var stage = document.getElementById(containerId);
+      if (!stage) return;
+      itemSelector = itemSelector || '.pc-card';
+      var cards = Array.prototype.slice.call(stage.children).filter(function (el) {
+        return el.matches && el.matches(itemSelector);
+      });
+      var n = cards.length;
+      if (!n) return;
+      var current = 0;
+      var dragY = 0;
+      var dots = Array.prototype.slice.call(stage.querySelectorAll('.stack-dots span'));
+      function updateDots() {
+        dots.forEach(function (dot, i) { dot.classList.toggle('is-active', i === current); });
+      }
+
+      function wrapDelta(d) {
+        d = ((d % n) + n) % n;
+        if (d > n / 2) d -= n;
+        return d;
+      }
+      function render(extra) {
+        extra = extra || 0;
+        cards.forEach(function (card, i) {
+          var delta = wrapDelta(i - current);
+          var ty, scale, op, z;
+          if (delta === 0) { ty = extra; scale = 1; op = Math.max(.25, 1 - Math.abs(extra) / 220); z = 3; }
+          else if (delta === 1) { ty = 28 + extra * .15; scale = .93; op = .85; z = 2; }
+          else if (delta === -1) { ty = -28 + extra * .15; scale = .93; op = 0; z = 2; }
+          else { ty = 0; scale = .9; op = 0; z = 1; }
+          card.style.setProperty('--ty', ty + 'px');
+          card.style.setProperty('--scale', scale);
+          card.style.setProperty('--op', op);
+          card.style.zIndex = z;
+          card.setAttribute('aria-hidden', delta === 0 ? 'false' : 'true');
+        });
+      }
+
+      var dragging = false;
+      var startY = 0;
+      stage.addEventListener('pointerdown', function (e) {
+        dragging = true;
+        startY = e.clientY;
+        stage.classList.add('is-dragging');
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener('pointermove', function (e) {
+        if (!dragging) return;
+        dragY = e.clientY - startY;
+        render(dragY);
+      });
+      function endDrag() {
+        if (!dragging) return;
+        dragging = false;
+        stage.classList.remove('is-dragging');
+        if (dragY < -50) current = (current + 1) % n;
+        else if (dragY > 50) current = (current - 1 + n) % n;
+        dragY = 0;
+        render(0);
+        updateDots();
+      }
+      stage.addEventListener('pointerup', endDrag);
+      stage.addEventListener('pointercancel', endDrag);
+
+      render();
+      updateDots();
+
+      // Dica automática: assim que a pilha aparece na tela, o card da
+      // frente "espia" para cima e volta sozinho — ensina o gesto de
+      // arrastar sem precisar só do texto abaixo.
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!reduce && 'IntersectionObserver' in window) {
+        var nudged = false;
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting && !nudged) {
+              nudged = true;
+              setTimeout(function () { render(-46); }, 500);
+              setTimeout(function () { render(0); }, 950);
+              io.disconnect();
+            }
+          });
+        }, { threshold: .6 });
+        io.observe(stage);
+      }
+    }
+    initVerticalStack('included-grid');
+    initVerticalStack('problem-items', '.problem-item');
+    initVerticalStack('steps-timeline', '.step-item');
+
+    // ---- Sliders "antes e depois": arraste com mouse, dedo ou teclado
+    // (setas) revela a foto de "antes" por baixo da de "depois". ----
+    var baSliders = Array.prototype.slice.call(document.querySelectorAll('[data-ba]'));
+    baSliders.forEach(function (slider) {
+      var dragging = false;
+      function setPos(clientX) {
+        var rect = slider.getBoundingClientRect();
+        var pct = ((clientX - rect.left) / rect.width) * 100;
+        pct = Math.max(0, Math.min(100, pct));
+        slider.style.setProperty('--pos', pct + '%');
+        slider.setAttribute('aria-valuenow', Math.round(pct));
+      }
+      slider.addEventListener('pointerdown', function (e) {
+        dragging = true;
+        slider.setPointerCapture(e.pointerId);
+        setPos(e.clientX);
+      });
+      slider.addEventListener('pointermove', function (e) {
+        if (dragging) setPos(e.clientX);
+      });
+      function stop() { dragging = false; }
+      slider.addEventListener('pointerup', stop);
+      slider.addEventListener('pointercancel', stop);
+      slider.addEventListener('keydown', function (e) {
+        var current = parseFloat(slider.style.getPropertyValue('--pos')) || 50;
+        if (e.key === 'ArrowLeft') { slider.style.setProperty('--pos', Math.max(0, current - 5) + '%'); e.preventDefault(); }
+        if (e.key === 'ArrowRight') { slider.style.setProperty('--pos', Math.min(100, current + 5) + '%'); e.preventDefault(); }
+      });
+    });
 
     // ---- Régua dourada que se preenche conforme a leitura avança, com os
     // números trocando de dourado para azul-marinho — usada em "O problema"
@@ -180,6 +382,7 @@
     }
     initTimelineFill('problem-timeline', 'problem-line-fill', '.problem-num', 'vertical');
     initTimelineFill('steps-timeline', 'steps-line-fill', '.step-num', 'responsive');
+    initTimelineFill('solution-timeline', 'solution-line-fill', '.solution-dot', 'vertical');
 
     // ---- FAQ: abre e fecha com a mesma transição suave nos dois sentidos.
     // O atributo nativo [open] do <details> some assim que o clique fecha
@@ -235,6 +438,30 @@
           if (card.classList.contains('is-open')) faqClose(card);
           else faqOpen(card);
         });
+      });
+    }
+
+    // ---- Formulário "A gente te chama" ----
+    // AINDA SEM BACKEND: só valida e mostra a confirmação visual. Os
+    // dados não são enviados nem salvos em lugar nenhum até decidirmos
+    // onde gravar (Supabase, Google Sheets, Formspree etc.) e trocarmos
+    // este bloco por um fetch/POST de verdade para lá.
+    var leadForm = document.getElementById('lead-form');
+    if (leadForm) {
+      var leadMsg = document.getElementById('lead-form-msg');
+      leadForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        if (!leadForm.checkValidity()) {
+          leadForm.reportValidity();
+          return;
+        }
+        dl({ event: 'lead_form_submit' });
+        leadForm.querySelectorAll('input').forEach(function (i) { i.disabled = true; });
+        leadForm.querySelector('button[type="submit"]').disabled = true;
+        if (leadMsg) {
+          leadMsg.textContent = 'Recebemos seus dados! Vamos entrar em contato em breve.';
+          leadMsg.style.display = 'block';
+        }
       });
     }
 

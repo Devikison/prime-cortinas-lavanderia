@@ -3,6 +3,110 @@
    arquivo cobre o que estilo inline não resolve: fundo com textura, sistema
    de cards com profundidade, motion lento e "luxuoso", e estados de :hover. */
 
+/* ── Cabeçalho: links no desktop, hambúrguer no mobile ─────────────────── */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 2.6vw, 34px);
+}
+.nav-link {
+  position: relative;
+  font-size: .92rem;
+  font-weight: 600;
+  color: #1B304F;
+  text-decoration: none;
+  padding-bottom: 4px;
+  white-space: nowrap;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 1px;
+  background: #EA8F0E;
+  transition: width .35s cubic-bezier(.16,1,.3,1);
+}
+.nav-link:hover { color: #B8710A; }
+.nav-link:hover::after { width: 100%; }
+
+.nav-toggle {
+  display: none;
+  position: relative;
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border: none;
+  border-radius: 10px;
+  background: #1B304F;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 -2px 4px rgba(0,0,0,.15) inset, 0 10px 20px -10px rgba(27,48,79,.4);
+  transition: transform .35s cubic-bezier(.16,1,.3,1), box-shadow .35s cubic-bezier(.16,1,.3,1);
+}
+.nav-toggle:hover { transform: translateY(-2px); box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 4px rgba(0,0,0,.16) inset, 0 18px 30px -12px rgba(27,48,79,.45); }
+.nav-toggle:active { transform: translateY(0); }
+.nav-toggle-bar {
+  width: 20px;
+  height: 2px;
+  border-radius: 2px;
+  background: #fff;
+  transition: transform .45s cubic-bezier(.16,1,.3,1), opacity .3s cubic-bezier(.16,1,.3,1);
+}
+.nav-toggle.is-open .nav-toggle-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle.is-open .nav-toggle-bar:nth-child(2) { opacity: 0; }
+.nav-toggle.is-open .nav-toggle-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 900px) {
+  #site-header { position: fixed; }
+  .nav-links {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 1px;
+    background: rgba(255,255,255,.98);
+    backdrop-filter: blur(18px) saturate(160%);
+    -webkit-backdrop-filter: blur(18px) saturate(160%);
+    border-bottom: 1px solid #E6E3DC;
+    box-shadow: 0 24px 48px -24px rgba(27,48,79,.3);
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    /* Devagar e em duas etapas (altura, depois opacidade) — o mesmo
+       motion "lento e luxuoso" do resto do site, pra abrir/fechar de
+       forma fluida em vez de num corte seco. */
+    transition: max-height .65s cubic-bezier(.16,1,.3,1), opacity .5s cubic-bezier(.16,1,.3,1);
+  }
+  .nav-links.is-open { max-height: 420px; opacity: 1; }
+  .nav-link {
+    padding: 18px clamp(16px,4vw,44px);
+    border-top: 1px solid #E6E3DC;
+  }
+  .nav-link::after { display: none; }
+  .nav-link:hover, .nav-link:active { background: rgba(234,143,14,.06); color: #B8710A; }
+  .nav-toggle { display: flex; }
+  .nav-wa-label { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-links, .nav-toggle-bar, .nav-toggle { transition: none; }
+}
+
+/* Grades de 2 colunas com proporção fixa (texto maior de um lado, mídia
+   menor do outro) — abaixo de 760px sempre empilham em 1 coluna só,
+   porque minmax() sozinho não força isso quando as duas faixas somadas
+   ainda cabem (ou pior, "cabem" mas comprimem o conteúdo lateralmente). */
+@media (max-width: 760px) {
+  .two-col-grid { grid-template-columns: 1fr !important; }
+}
+
 :root {
   --navy: #1B304F;
   --navy-deep: #142540;
@@ -49,7 +153,7 @@ body {
   margin: 0;
   background: #FFFFFF;
   color: #1B304F;
-  font-family: 'Public Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -267,39 +371,50 @@ summary::-webkit-details-marker { display: none; }
 .step-num { color: var(--gold-text); transition: color .5s var(--ease-lux), border-color .5s var(--ease-lux); }
 .step-num.is-passed { color: var(--navy); }
 
-@media (max-width: 760px) {
+/* Mobile: mesma pilha compacta e arrastável das outras seções — ver
+   initVerticalStack em site.js. Cada .step-item (número + card) é a
+   unidade que empilha. */
+@media (max-width: 560px) {
   .pc-steps {
+    position: relative;
+    display: block;
+    max-width: calc(100% - 36px);
+    margin: 0 auto;
+    height: 240px;
+    touch-action: none;
+  }
+  .steps-line-track, .steps-line-fill { display: none; }
+  /* Sem a régua visível, o "progresso de leitura" que troca a cor do
+     número (dourado → azul) não faz sentido na pilha — trava tudo
+     dourado, senão os primeiros números aparecem "acesos" antes da hora
+     só por causa da posição de rolagem da página. */
+  .step-num.is-passed { color: var(--gold-text); }
+  .step-item {
+    position: absolute;
+    inset: 0;
+    --ty: 0px;
+    --scale: 1;
+    --op: 1;
     display: flex;
     flex-direction: column;
-    gap: 0;
-    max-width: 440px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: 14px;
+    transform: translateY(var(--ty)) scale(var(--scale));
+    opacity: var(--op);
+    transition: transform 1.05s var(--ease-lux), opacity 1.05s var(--ease-lux);
+    cursor: grab;
   }
-  .steps-line-track {
-    /* Passa exatamente pelo centro dos círculos de 40px (19px = metade
-       de 40px menos metade da linha de 2px). */
-    left: 19px;
-    top: 6px;
-    bottom: 6px;
-    width: 2px;
-    height: auto;
+  .pc-steps.is-dragging .step-item { transition: none; }
+  .step-item:active { cursor: grabbing; }
+  .step-item .pc-card {
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(27,48,79,.08), 0 32px 60px -24px rgba(27,48,79,.4);
+    touch-action: none;
   }
-  .steps-line-fill {
-    left: 19px;
-    top: 6px;
-    width: 2px;
-    height: 0;
-    transition: height .12s linear;
-    background: linear-gradient(180deg, var(--gold), var(--gold-text));
-  }
-  .step-item {
-    flex-direction: row;
-    align-items: flex-start;
-    text-align: left;
-    gap: 16px;
-    padding-bottom: clamp(20px, 5vw, 28px);
-  }
-  .step-item:last-child { padding-bottom: 0; }
-  .step-item .pc-card { text-align: left; }
 }
 @media (prefers-reduced-motion: reduce) {
   .steps-line-fill { transition: none; }
@@ -320,6 +435,12 @@ summary::-webkit-details-marker { display: none; }
 /* Botões e links com hover — motion lento e com elevação, com um leve
    relevo 3D (brilho no topo + sombra interna na base) que dá o toque
    luxuoso sem alterar as cores de fundo definidas inline. */
+/* Letter-spacing e peso mais firmes em todos os botões — pra não
+   parecerem texto solto, principalmente no mobile, onde não existe hover
+   pra "avisar" que aquilo é clicável antes do toque. */
+.btn-primary, .btn-dark, .btn-footer, .btn-outline, .btn-gold, .btn-cookie-allow, .btn-cookie-deny {
+  letter-spacing: .015em;
+}
 .btn-primary, .btn-dark, .btn-footer, .btn-outline, .btn-cookie-allow, .btn-cookie-deny {
   position: relative;
   isolation: isolate;
@@ -370,31 +491,31 @@ summary::-webkit-details-marker { display: none; }
 }
 
 .btn-primary {
-  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 4px rgba(0,0,0,.12) inset, 0 12px 26px -10px rgba(27,48,79,.45);
+  box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 4px rgba(0,0,0,.12) inset, 0 16px 32px -12px rgba(27,48,79,.55);
   transition: background var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
 }
 .btn-primary:hover { background: #142540; transform: translateY(-4px); box-shadow: 0 1px 0 rgba(255,255,255,.4) inset, 0 -2px 4px rgba(0,0,0,.14) inset, 0 26px 44px -16px rgba(27,48,79,.5); }
 .btn-primary:active { transform: translateY(-1px); box-shadow: 0 1px 0 rgba(255,255,255,.2) inset, 0 -1px 2px rgba(0,0,0,.16) inset, 0 8px 16px -8px rgba(27,48,79,.4); }
 
 .btn-dark {
-  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 -2px 4px rgba(0,0,0,.15) inset, 0 10px 20px -10px rgba(27,48,79,.4);
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 -2px 4px rgba(0,0,0,.15) inset, 0 12px 26px -10px rgba(27,48,79,.5);
   transition: background-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
 }
 .btn-dark:hover { background: #142540; transform: translateY(-3px); box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 -2px 4px rgba(0,0,0,.16) inset, 0 18px 30px -12px rgba(27,48,79,.45); }
 .btn-dark:active { transform: translateY(0); }
 
 .btn-footer {
-  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 -2px 3px rgba(20,37,64,.08) inset, 0 14px 28px -14px rgba(0,0,0,.35);
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 -2px 3px rgba(20,37,64,.08) inset, 0 18px 36px -14px rgba(0,0,0,.4);
   transition: transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
 }
 .btn-footer:hover { transform: translateY(-4px); box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 -2px 3px rgba(20,37,64,.1) inset, 0 28px 48px -16px rgba(0,0,0,.42); }
 .btn-footer:active { transform: translateY(-1px); }
 
 .btn-outline {
-  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 4px 10px -6px rgba(27,48,79,.12);
-  transition: border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
+  box-shadow: 0 1px 0 rgba(255,255,255,.7) inset, 0 6px 16px -8px rgba(27,48,79,.22);
+  transition: border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux), background-color var(--dur-med) var(--ease-lux);
 }
-.btn-outline:hover { border-color: #EA8F0E; transform: translateY(-3px); box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 18px 32px -16px rgba(27,48,79,.24); }
+.btn-outline:hover { border-color: #EA8F0E; background: rgba(234,143,14,.06); transform: translateY(-3px); box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 18px 32px -16px rgba(27,48,79,.24); }
 
 .btn-cookie-deny { transition: border-color var(--dur-med) var(--ease-lux); }
 .btn-cookie-deny:hover { border-color: #EA8F0E; }
@@ -528,8 +649,121 @@ summary::-webkit-details-marker { display: none; }
 @media (max-width: 860px) {
   .included-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   SISTEMA DE "PILHA VERTICAL" (mobile) — compartilhado por 3 seções:
+   "O que está incluído", "Por que quase ninguém lava" e "Cinco passos".
+   Um item por vez em foco; arrastar o dedo pra cima troca pelo próximo,
+   em loop infinito. JS: initVerticalStack em site.js controla
+   --ty/--scale/--op por item e a bolinha ativa.
+
+   Os elementos utilitários (.stack-grabber, .stack-dots, .stack-hint)
+   ficam ESCONDIDOS por padrão aqui, ANTES de qualquer media query que os
+   reative — a ordem importa: como a especificidade é igual (um seletor
+   de classe), a regra que vem depois no arquivo vence em caso de empate,
+   então esta linha tem que vir antes das que os mostram, nunca depois.
+   ══════════════════════════════════════════════════════════════════════ */
+.stack-hint, .stack-grabber, .stack-dots { display: none; }
+
 @media (max-width: 560px) {
-  .included-grid { grid-template-columns: 1fr; }
+  /* Alcinha no topo do card da frente — o mesmo sinal visual de "isto
+     arrasta" usado em bottom sheets de app. */
+  .stack-grabber {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    z-index: 10;
+    width: 36px;
+    height: 4px;
+    margin-left: -18px;
+    border-radius: 3px;
+    background: rgba(27,48,79,.2);
+    pointer-events: none;
+  }
+  /* Coluna de bolinhas — fica um pouco pra fora da borda direita do
+     card, dentro do respiro lateral, marcando em qual item você está. */
+  .stack-dots {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    position: absolute;
+    top: 50%;
+    right: -14px;
+    z-index: 10;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+  .stack-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(27,48,79,.2);
+    transition: background .35s var(--ease-lux), transform .35s var(--ease-lux);
+  }
+  .stack-dots span.is-active { background: var(--gold); transform: scale(1.5); }
+  .stack-hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--gold-text);
+  }
+  .stack-hint svg { animation: stack-hint-bob 1.4s ease-in-out infinite; }
+}
+@keyframes stack-hint-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stack-hint svg { animation: none; }
+}
+
+/* "O que está incluído" — pilha compacta e de altura fixa; só o card da
+   frente e uma lasca do próximo (atrás, mais baixo e apagado) ficam
+   visíveis. O container fica um pouco mais estreito que a tela
+   (max-width abaixo de 100%) de propósito: essa margem sobrando nas
+   laterais não pertence à área de arraste, então o dedo consegue rolar a
+   página normalmente pousando ali, mesmo com o card "prendendo" o toque
+   verticalmente dentro dele. */
+@media (max-width: 560px) {
+  .included-grid {
+    position: relative;
+    display: block;
+    grid-template-columns: none;
+    height: 500px;
+    max-width: calc(100% - 36px);
+    margin: 0 auto;
+    /* "none" (em vez de "pan-y"): sem isto, o navegador assume que um
+       gesto vertical é para rolar a PÁGINA e nunca entrega o toque pro
+       JS arrastar o card — era por isso que o arraste não respondia. */
+    touch-action: none;
+  }
+  .included-grid > .pc-card {
+    --ty: 0px;
+    --scale: 1;
+    --op: 1;
+    position: absolute;
+    inset: 0;
+    margin: 0 !important;
+    grid-column: auto !important;
+    border-radius: 18px;
+    box-shadow: 0 1px 2px rgba(27,48,79,.08), 0 32px 60px -24px rgba(27,48,79,.4);
+    transform: translateY(var(--ty)) scale(var(--scale));
+    opacity: var(--op);
+    transition: transform 1.05s var(--ease-lux), opacity 1.05s var(--ease-lux);
+    cursor: grab;
+    touch-action: none;
+  }
+  .included-grid.is-dragging > .pc-card { transition: none; }
+  .included-grid > .pc-card:active { cursor: grabbing; }
+  .included-grid > .pc-card-dark { display: flex; align-items: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .included-grid > .pc-card { transition: none; }
 }
 
 /* ── Mobile: títulos centralizados e quebras de texto limpas ───────────── */
@@ -537,6 +771,14 @@ summary::-webkit-details-marker { display: none; }
   .sec-eyebrow, .sec-title, .mobile-center { text-align: center; }
 }
 .sec-title, h1, h2, h3 { text-wrap: balance; }
+
+/* Quebra de linha manual só pra desktop, em títulos onde o cliente pediu
+   uma quebra específica (em vez de deixar o balanceamento automático do
+   navegador decidir) — no mobile o título volta a quebrar sozinho. */
+.br-desktop { display: none; }
+@media (min-width: 761px) {
+  .br-desktop { display: block; content: ""; }
+}
 
 /* Linha de CTAs/ações que deve ficar centralizada no mobile mesmo quando o
    bloco ao redor é alinhado à esquerda no desktop. */
@@ -578,10 +820,6 @@ summary::-webkit-details-marker { display: none; }
   padding: clamp(22px, 2.6vw, 28px) clamp(24px, 3.4vw, 40px);
   animation: stats-scroll 32s linear infinite;
 }
-.stats-marquee:hover .stats-track,
-.stats-marquee:focus-within .stats-track {
-  animation-play-state: paused;
-}
 @keyframes stats-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
@@ -603,18 +841,21 @@ summary::-webkit-details-marker { display: none; }
 
 /* ── Portfólio: carrossel "coverflow" — card central em foco, vizinhos
    desfocados nas laterais, transição lenta e luxuosa ────────────────── */
+.pf-wrap { position: relative; touch-action: pan-y; }
 .pf-stage {
   position: relative;
   height: clamp(340px, 54vw, 480px);
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: grab;
   /* Os slides fora de foco ficam deslocados bem além da borda via
      transform — sem isto, essa área invisível alarga a página e cria
      scroll horizontal fantasma (a página "escorrega" ao arrastar no
      celular). */
   overflow: hidden;
 }
+.pf-stage:active { cursor: grabbing; }
 .pf-slides {
   position: relative;
   width: 100%;
@@ -657,10 +898,18 @@ summary::-webkit-details-marker { display: none; }
   border-radius: 20px;
   box-shadow: 0 6px 14px -4px rgba(27,48,79,.35);
 }
+/* Setas: no mobile ficam numa fileira abaixo da foto (não sobrepõem a
+   imagem); a partir de 641px sobem para os cantos do carrossel, como no
+   desktop original. */
+.pf-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  margin: 20px 0 0;
+}
 .pf-stage-arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
+  position: static;
   width: 48px;
   height: 48px;
   border-radius: 50%;
@@ -675,13 +924,24 @@ summary::-webkit-details-marker { display: none; }
   box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 10px 22px -8px rgba(27,48,79,.35);
   transition: border-color var(--dur-med) var(--ease-lux), transform var(--dur-med) var(--ease-lux), box-shadow var(--dur-med) var(--ease-lux);
 }
-.pf-stage-arrow:hover { border-color: var(--gold); transform: translateY(-50%) scale(1.1); box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 18px 32px -10px rgba(27,48,79,.45); }
-.pf-stage-arrow-prev { left: clamp(4px, 3vw, 24px); }
-.pf-stage-arrow-next { right: clamp(4px, 3vw, 24px); }
+.pf-stage-arrow:hover { border-color: var(--gold); transform: scale(1.1); box-shadow: 0 1px 0 rgba(255,255,255,.9) inset, 0 18px 32px -10px rgba(27,48,79,.45); }
+@media (min-width: 641px) {
+  .pf-controls {
+    position: absolute;
+    inset: 0;
+    margin: 0;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+  .pf-stage-arrow {
+    position: static;
+    pointer-events: auto;
+    margin: 0 clamp(4px, 3vw, 24px);
+  }
+  .pf-stage-arrow:hover { transform: scale(1.1); }
+}
 @media (max-width: 640px) {
-  .pf-stage-arrow { width: 40px; height: 40px; }
-  .pf-stage-arrow-prev { left: 4px; }
-  .pf-stage-arrow-next { right: 4px; }
+  .pf-stage-arrow { width: 44px; height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .pf-slide { transition: none; }
@@ -758,7 +1018,7 @@ summary::-webkit-details-marker { display: none; }
   background: #fff;
   border: 1px solid rgba(234,143,14,.45);
   box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 -2px 3px rgba(27,48,79,.08) inset, 0 6px 14px -8px rgba(27,48,79,.35);
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: 'PT Serif', Georgia, serif;
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--gold-text);
@@ -806,4 +1066,329 @@ summary::-webkit-details-marker { display: none; }
 .testi-quote-dark { color: rgba(255,255,255,.92); }
 @media (prefers-reduced-motion: reduce) {
   .testi-slide { transition: none; }
+}
+
+/* ── "Por que quase ninguém lava": acordeão no desktop (passa o mouse e o
+   card abre, mostrando o texto completo; os outros ficam só com o título),
+   vira carrossel horizontal de arrastar no mobile ─────────────────────── */
+.problem-items { display: flex; flex-direction: column; gap: clamp(20px, 3vw, 32px); }
+.problem-card { padding: clamp(18px, 2.2vw, 26px); cursor: default; }
+.problem-card-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 0;
+  line-height: 1.4;
+  transition: color var(--dur-slow) var(--ease-lux);
+}
+.problem-card-body {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  /* Bem mais lento que o padrão do site (1.1s/.9s em vez de .6s/.5s) —
+     um acordeão que abre rápido demais no hover parece nervoso; devagar
+     assim lê como um gesto deliberado, mais "premium". */
+  transition: max-height 1.1s var(--ease-lux), opacity .9s var(--ease-lux), margin-top 1.1s var(--ease-lux);
+}
+.problem-card-body-inner {
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--text-muted);
+  margin: 0;
+  max-width: 62ch;
+  text-wrap: pretty;
+}
+.problem-card:hover, .problem-card:focus-within, .problem-card:focus {
+  border-color: rgba(234,143,14,.5);
+}
+.problem-card:hover .problem-card-title,
+.problem-card:focus-within .problem-card-title { color: var(--gold-text); }
+.problem-card:hover .problem-card-body,
+.problem-card:focus-within .problem-card-body {
+  max-height: 260px;
+  opacity: 1;
+  margin-top: 12px;
+}
+/* Mobile: mesmo modelo de card de "Cinco passos" — selo numerado acima
+   do card (não mais sobreposto), tudo centralizado, para as 3 seções
+   empilhadas lerem como um conjunto padronizado. Corpo do texto sempre
+   aberto (sem hover no touch), já que o próprio card em foco é o que se
+   lê; só o parágrafo fica alinhado à esquerda por dentro, porque texto
+   longo centralizado fica com bordas irregulares e cansa a leitura.
+
+   IMPORTANTE — tudo aqui é prefixado com #problem-items (ou
+   #problem-timeline): .problem-item e .problem-num também são
+   reaproveitados pelo checklist da seção "Aqui não entra máquina", então
+   uma regra sem esse prefixo vaza pra lá e quebra aquele checklist
+   inteiro (foi exatamente esse bug que já aconteceu antes). */
+@media (max-width: 560px) {
+  #problem-timeline .problem-line-track, #problem-timeline .problem-line-fill { display: none; }
+  #problem-items {
+    position: relative;
+    display: block;
+    height: 380px;
+    max-width: calc(100% - 36px);
+    margin: 0 auto;
+    touch-action: none;
+  }
+  /* Especificidade alta (#problem-items em vez de só .problem-item) de
+     propósito: cada item também tem [data-reveal], cuja classe
+     .is-visible zera o transform/opacity depois da animação de entrada,
+     e precisa perder essa disputa para a pilha continuar controlando
+     transform/opacity depois disso. */
+  #problem-items .problem-item {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 14px;
+    --ty: 0px;
+    --scale: 1;
+    --op: 1;
+    transform: translateY(var(--ty)) scale(var(--scale));
+    opacity: var(--op);
+    transition: transform 1.05s var(--ease-lux), opacity 1.05s var(--ease-lux);
+    cursor: grab;
+    /* Precisa estar tanto aqui quanto no card abaixo: um filho com
+       overflow/scroll próprio pode reativar o toque nativo do navegador
+       dentro dele mesmo com o pai bloqueando — foi por isso que o
+       arraste não respondia no Android/iPhone antes. */
+    touch-action: none;
+  }
+  #problem-items.is-dragging .problem-item { transition: none; }
+  #problem-items .problem-item:active { cursor: grabbing; }
+  /* Volta a ser um selo normal, no fluxo (como o círculo do "Cinco
+     passos"), em vez de sobreposto no card — mesmo estilo, sem risco de
+     tampar texto. */
+  #problem-items .problem-num {
+    position: static;
+    flex: none;
+    width: 40px;
+    height: 40px;
+    font-size: 1.05rem;
+    background: #fff;
+    color: var(--gold-text);
+    border: 1px solid rgba(234,143,14,.45);
+  }
+  #problem-items .problem-card {
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+    touch-action: none;
+    border-radius: 18px;
+    border-color: rgba(234,143,14,.45);
+    box-shadow: 0 1px 2px rgba(27,48,79,.08), 0 32px 60px -24px rgba(27,48,79,.4);
+  }
+  #problem-items .problem-card-title { margin-top: 0; color: var(--navy); }
+  #problem-items .problem-card-body { max-height: none; opacity: 1; margin-top: 12px; }
+  #problem-items .problem-card-body-inner {
+    max-width: none;
+    font-size: .94rem;
+    line-height: 1.65;
+    text-align: left;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .problem-card-title, .problem-card-body { transition: none; }
+}
+
+/* ── "Aqui não entra máquina": tags de tecido + checklist com régua
+   dourada reaproveitando os estilos de .problem-timeline ──────────────── */
+.fabric-tag {
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: .78rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  color: var(--navy);
+  background: #fff;
+  white-space: nowrap;
+}
+/* Mobile: as 4 tags ficam numa linha só (nunca quebram pra baixo) —
+   compactas o bastante pra caber lado a lado na maioria dos celulares;
+   em telas bem estreitas, a fileira toda rola de leve na horizontal em
+   vez de embolar em duas linhas. */
+@media (max-width: 480px) {
+  .fabric-tags-row {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .fabric-tag { padding: 7px 12px; font-size: .72rem; }
+}
+.solution-timeline { padding-left: 0; }
+.solution-checklist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: clamp(16px, 2.4vw, 22px); }
+.solution-dot { font-size: .95rem; }
+.solution-text { font-size: .98rem; line-height: 1.6; color: var(--text-muted); padding-top: 8px; display: inline-block; }
+.solution-checklist .problem-item { grid-template-columns: auto 1fr; align-items: center; }
+
+/* Mobile: a coluna de texto inteira desta seção fica centralizada — a
+   régua do checklist (compartilhada com "O problema") vira um traço
+   vertical fininho no meio dos itens, então também é escondida aqui,
+   já que cada linha do checklist passa a ser um par ícone+texto
+   centrado, sem precisar da régua para se situar. */
+@media (max-width: 700px) {
+  .solution-col { text-align: center; }
+  .fabric-tags-row { justify-content: center; }
+  #solution-timeline .problem-line-track, #solution-timeline .problem-line-fill { display: none; }
+  .solution-checklist { align-items: center; }
+  .solution-checklist .problem-item {
+    grid-template-columns: auto auto;
+    justify-content: center;
+    gap: 12px;
+  }
+  .solution-text { text-align: left; padding-top: 0; }
+  .solution-quote {
+    border-left: none;
+    padding-left: 0;
+    text-align: center;
+  }
+}
+
+/* ── Cards de benefícios com miniatura de foto acima do ícone ──────────── */
+.benefit-card-img { display: flex; flex-direction: column; }
+.benefit-thumb {
+  position: relative;
+  aspect-ratio: 8/5;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0 0 18px;
+}
+.benefit-thumb .img-placeholder { border-radius: 10px; }
+
+/* ── Selo "5,0 ★★★★★" acima do carrossel de depoimentos ─────────────── */
+.rating-badge {
+  font-family: 'PT Serif', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+/* ── Depoimentos: faixa contínua (marquee) que nunca pausa no hover, e
+   pode ser arrastada livremente com o mouse ou o dedo — o arraste
+   interrompe o auto-scroll por um instante e ele retoma sozinho ──────── */
+.testi-marquee {
+  position: relative;
+  overflow: hidden;
+  /* Espaço de sobra em cima/embaixo: o card não tem o "levante" de hover
+     (ver .testi-card-flat abaixo), mas esta folga evita qualquer corte
+     se o card crescer um pixel a mais em algum navegador. */
+  padding: 10px 0;
+  margin: -10px 0;
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.testi-marquee-track {
+  display: flex;
+  gap: 16px;
+  width: max-content;
+  cursor: grab;
+  /* "none" (em vez de "pan-y"): mesmo bug dos outros arrastes — "pan-y"
+     deixa o navegador entender o gesto como rolagem da página e toma o
+     toque pra si, em vez de deixar o JS mover a faixa. */
+  touch-action: none;
+  user-select: none;
+}
+.testi-marquee-track:active { cursor: grabbing; }
+.testi-card-flat { flex: none; width: min(84vw, 360px); padding: clamp(24px, 3vw, 32px); }
+/* Sem o "levante" de hover do .pc-card aqui: dentro de uma faixa que se
+   move sozinha o tempo todo, o mouse cruza os cards a cada instante, e
+   esse hover ficava disparando repetidas vezes — cortando o topo do
+   card contra a borda do container e dando a sensação de travamento. */
+.testi-card-flat:hover { transform: none; }
+/* Mobile: cards menores e com o texto limitado a poucas linhas, pra
+   caberem por inteiro na tela com uma lasca do card anterior e do
+   próximo visível nas bordas — assim dá pra perceber que tem mais
+   depoimentos vindo e indo, em vez de um card gigante tomando a tela
+   inteira. */
+@media (max-width: 560px) {
+  .testi-marquee-track { gap: 32px; }
+  .testi-card-flat { width: 66vw; padding: 20px 22px; }
+  .testi-quote {
+    font-size: .88rem;
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* ── Slider "Antes e depois": arraste (mouse ou dedo) revela a foto de
+   "antes" por baixo da de "depois" — funciona igual em desktop e mobile,
+   sem depender de hover. ────────────────────────────────────────────── */
+.ba-slider {
+  --pos: 50%;
+  position: relative;
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  border-radius: 14px;
+  cursor: ew-resize;
+  /* "none" (em vez de "pan-y"): o slider é só de arraste horizontal, mas
+     "pan-y" deixava o navegador entender que o gesto podia ser rolagem
+     vertical da página e tomar o toque pra si — daí a tela "mexendo"
+     em vez do slider responder, no Android e no iPhone. */
+  touch-action: none;
+  user-select: none;
+  box-shadow: 0 1px 2px rgba(27,48,79,.05), 0 20px 44px -28px rgba(27,48,79,.18);
+}
+.ba-slider:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.ba-after, .ba-before, .ba-before-inner {
+  position: absolute;
+  inset: 0;
+}
+.ba-after.img-placeholder { border-radius: 0; }
+.ba-before {
+  clip-path: inset(0 calc(100% - var(--pos)) 0 0);
+  transition: clip-path .05s linear;
+}
+.ba-before-inner.img-placeholder { border-radius: 0; border-right: 0; }
+.ba-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--pos);
+  width: 3px;
+  background: #fff;
+  box-shadow: 0 0 0 1px rgba(27,48,79,.15), 0 4px 14px rgba(27,48,79,.35);
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 3;
+}
+.ba-handle-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 0 rgba(255,255,255,.8) inset, 0 10px 22px -8px rgba(27,48,79,.4);
+}
+.ba-label {
+  position: absolute;
+  top: 14px;
+  z-index: 2;
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(20,37,64,.55);
+  padding: 6px 12px;
+  border-radius: 20px;
+  pointer-events: none;
+}
+.ba-label-before { left: 14px; }
+.ba-label-after { right: 14px; }
+@media (prefers-reduced-motion: reduce) {
+  .ba-before { transition: none; }
 }
