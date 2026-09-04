@@ -607,11 +607,16 @@ summary::-webkit-details-marker { display: none; }
 .carrossel-track::-webkit-scrollbar { display: none; }
 .carrossel-card {
   scroll-snap-align: center;
+  /* Sem isto, um scroll rápido (roda do mouse ou swipe forte) pula
+     direto do 1º pro 3º card: o navegador só encosta no ponto de snap
+     mais próximo de onde o gesto terminou, sem parar nos do meio.
+     "always" obriga a parar em cada card, um de cada vez. */
+  scroll-snap-stop: always;
   box-sizing: border-box;
   opacity: 1;
   filter: blur(0);
   transform: scale(1);
-  transition: opacity .4s ease, filter .4s ease, transform .4s ease;
+  transition: opacity .22s ease, filter .22s ease, transform .22s ease;
 }
 .carrossel-card + .carrossel-card { margin-top: 14px; }
 .carrossel-card.is-dimmed { opacity: .4; filter: blur(2.5px); transform: scale(.92); }
