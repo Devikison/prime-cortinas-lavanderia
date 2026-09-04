@@ -320,9 +320,145 @@
         io.observe(stage);
       }
     }
-    initVerticalStack('included-grid');
-    initVerticalStack('problem-items', '.problem-item');
-    initVerticalStack('steps-timeline', '.step-item');
+
+    // ---- Carrossel vertical com dots + setas no desktop e swipe/scroll no
+    // mobile, em loop infinito de verdade — o primeiro e o último card
+    // reais têm clones ocultos nas pontas da pista; ao passar de uma
+    // ponta, o JS "pula" sem transição pro card real correspondente do
+    // outro lado. Reutilizado nas 3 seções em pilha vertical do site
+    // ("O que está incluído", "Por que quase ninguém lava" e "Cinco
+    // passos") para manter a mesma mecânica em todas elas. A dica
+    // "arraste para ver mais" some (com fade + leve desfoque) assim que
+    // a pessoa interage uma vez — reaparece normalmente se a página for
+    // recarregada, já que não guardamos isso em nenhum storage. ----
+    function initCarrossel(ids) {
+      var track = document.getElementById(ids.track);
+      var dotsWrap = document.getElementById(ids.dots);
+      var hint = document.getElementById(ids.hint);
+      if (!track || !dotsWrap) return;
+      var allCards = Array.prototype.slice.call(track.querySelectorAll('.carrossel-card'));
+      var cards = allCards.filter(function (c) { return !c.classList.contains('carrossel-clone'); });
+      var leadClone = allCards[0];
+      var trailClone = allCards[allCards.length - 1];
+      var dots = Array.prototype.slice.call(dotsWrap.querySelectorAll('.carrossel-dot'));
+      if (!cards.length || !dots.length) return;
+
+      // A altura fixa em CSS foi calibrada para os cards com foto de "O
+      // que está incluído" — nas outras seções, com cards bem mais
+      // baixos, ela sobrava tanto que não dava espaço de sobra pro
+      // scroll alcançar o clone final, e o loop travava no último item.
+      // Recalcula a altura da pista a partir do card real (~1.65x a
+      // altura dele, a mesma proporção que já funciona bem lá), e
+      // reajusta em resize porque os clamps de fonte/padding do CSS
+      // mudam a altura do card conforme a largura da tela. ----
+      function sizeTrack() {
+        var h = cards[0].getBoundingClientRect().height;
+        if (h > 0) track.style.height = Math.round(h * 1.65) + 'px';
+      }
+      sizeTrack();
+      var resizeTimer = null;
+      window.addEventListener('resize', function () {
+        if (resizeTimer) clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function () {
+          sizeTrack();
+          jumpInstant(cards[currentIndex], currentIndex);
+        }, 150);
+      });
+
+      var currentIndex = 0;
+      function setActive(index) {
+        currentIndex = index;
+        cards.forEach(function (card, i) { card.classList.toggle('is-dimmed', i !== index); });
+        dots.forEach(function (dot, i) { dot.classList.toggle('is-active', i === index); });
+      }
+      setActive(0);
+
+      function centerOn(el, smooth) {
+        var trackRect = track.getBoundingClientRect();
+        var elRect = el.getBoundingClientRect();
+        var delta = (elRect.top + elRect.height / 2) - (trackRect.top + trackRect.height / 2);
+        var target = track.scrollTop + delta;
+        if (smooth) {
+          track.scrollTo({ top: target, behavior: 'smooth' });
+        } else {
+          var prevBehavior = track.style.scrollBehavior;
+          track.style.scrollBehavior = 'auto';
+          track.scrollTop = target;
+          track.style.scrollBehavior = prevBehavior;
+        }
+      }
+
+      var suppressUntil = 0;
+      function jumpInstant(el, index) {
+        setActive(index);
+        centerOn(el, false);
+        suppressUntil = Date.now() + 400;
+      }
+      jumpInstant(cards[0], 0);
+
+      function goTo(index) {
+        if (index < 0 || index >= cards.length) return;
+        setActive(index);
+        centerOn(cards[index], true);
+      }
+      function goToLoop(index) { goTo((index + cards.length) % cards.length); }
+
+      dots.forEach(function (dot, i) {
+        var go = function () { goTo(i); };
+        dot.addEventListener('click', go);
+        dot.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+        });
+      });
+      function bindNav(el, handler) {
+        if (!el) return;
+        el.addEventListener('click', handler);
+        el.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
+        });
+      }
+      bindNav(document.getElementById(ids.navPrev), function () { goToLoop(currentIndex - 1); });
+      bindNav(document.getElementById(ids.navNext), function () { goToLoop(currentIndex + 1); });
+
+      function findClosestCard() {
+        var trackRect = track.getBoundingClientRect();
+        var trackCenter = trackRect.top + trackRect.height / 2;
+        var closest = null;
+        var closestDist = Infinity;
+        allCards.forEach(function (card) {
+          var r = card.getBoundingClientRect();
+          var dist = Math.abs((r.top + r.height / 2) - trackCenter);
+          if (dist < closestDist) { closestDist = dist; closest = card; }
+        });
+        return closest;
+      }
+
+      var settleTimer = null;
+      function onScrollSettle() {
+        if (Date.now() < suppressUntil) return;
+        var closest = findClosestCard();
+        if (!closest) return;
+        if (closest === trailClone) { jumpInstant(cards[0], 0); return; }
+        if (closest === leadClone) { jumpInstant(cards[cards.length - 1], cards.length - 1); return; }
+        var idx = cards.indexOf(closest);
+        if (idx !== -1 && idx !== currentIndex) setActive(idx);
+      }
+      track.addEventListener('scroll', function () {
+        if (settleTimer) clearTimeout(settleTimer);
+        settleTimer = setTimeout(onScrollSettle, 120);
+      }, { passive: true });
+
+      function dismissHint() {
+        if (hint) hint.classList.add('is-hidden');
+        track.removeEventListener('scroll', dismissHint);
+        track.removeEventListener('touchstart', dismissHint);
+      }
+      track.addEventListener('scroll', dismissHint, { passive: true });
+      track.addEventListener('touchstart', dismissHint, { passive: true });
+    }
+    initCarrossel({ track: 'included-track', dots: 'included-dots', hint: 'included-hint', navPrev: 'included-nav-prev', navNext: 'included-nav-next' });
+    initCarrossel({ track: 'problem-track', dots: 'problem-dots', hint: 'problem-hint', navPrev: 'problem-nav-prev', navNext: 'problem-nav-next' });
+    initCarrossel({ track: 'steps-track', dots: 'steps-dots', hint: 'steps-hint', navPrev: 'steps-nav-prev', navNext: 'steps-nav-next' });
 
     // ---- Sliders "antes e depois": arraste com mouse, dedo ou teclado
     // (setas) revela a foto de "antes" por baixo da de "depois". ----
@@ -391,8 +527,6 @@
       window.addEventListener('resize', onScroll);
       update();
     }
-    initTimelineFill('problem-timeline', 'problem-line-fill', '.problem-num', 'vertical');
-    initTimelineFill('steps-timeline', 'steps-line-fill', '.step-num', 'responsive');
     initTimelineFill('solution-timeline', 'solution-line-fill', '.solution-dot', 'vertical');
 
     // ---- FAQ: abre e fecha com a mesma transição suave nos dois sentidos.

@@ -338,88 +338,9 @@ summary::-webkit-details-marker { display: none; }
 /* Barra de acento no topo do card — dá presença de cor sem pesar */
 .pc-card-accent { border-top: 3px solid var(--gold); }
 
-/* "Como funciona" — grade de 5 colunas com linha conectora no desktop;
-   vira uma linha do tempo vertical no mobile (mesma linguagem visual da
-   régua dourada de "O problema") em vez de embolar em 2+2+1. */
-.pc-steps {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: clamp(16px, 2vw, 24px);
-}
-/* Trilho estático (cinza) + preenchimento dourado que cresce conforme a
-   rolagem — mesma lógica de "O problema", padronizando as duas seções. */
-.steps-line-track {
-  position: absolute;
-  left: 6%;
-  top: 20px;
-  width: 88%;
-  height: 1px;
-  background: var(--border);
-}
-.steps-line-fill {
-  position: absolute;
-  left: 6%;
-  top: 20px;
-  width: 0;
-  height: 1px;
-  background: linear-gradient(90deg, var(--gold), var(--gold-text));
-  box-shadow: 0 0 12px rgba(234,143,14,.45);
-  transition: width .12s linear;
-}
-.step-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 14px; }
-.step-num { color: var(--gold-text); transition: color .5s var(--ease-lux), border-color .5s var(--ease-lux); }
-.step-num.is-passed { color: var(--navy); }
-
-/* Mobile: mesma pilha compacta e arrastável das outras seções — ver
-   initVerticalStack em site.js. Cada .step-item (número + card) é a
-   unidade que empilha. */
-@media (max-width: 560px) {
-  .pc-steps {
-    position: relative;
-    display: block;
-    max-width: calc(100% - 36px);
-    margin: 0 auto;
-    height: 240px;
-    touch-action: none;
-  }
-  .steps-line-track, .steps-line-fill { display: none; }
-  /* Sem a régua visível, o "progresso de leitura" que troca a cor do
-     número (dourado → azul) não faz sentido na pilha — trava tudo
-     dourado, senão os primeiros números aparecem "acesos" antes da hora
-     só por causa da posição de rolagem da página. */
-  .step-num.is-passed { color: var(--gold-text); }
-  .step-item {
-    position: absolute;
-    inset: 0;
-    --ty: 0px;
-    --scale: 1;
-    --op: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    gap: 14px;
-    transform: translateY(var(--ty)) scale(var(--scale));
-    opacity: var(--op);
-    transition: transform 1.05s var(--ease-lux), opacity 1.05s var(--ease-lux);
-    cursor: grab;
-  }
-  .pc-steps.is-dragging .step-item { transition: none; }
-  .step-item:active { cursor: grabbing; }
-  .step-item .pc-card {
-    width: 100%;
-    box-sizing: border-box;
-    border-radius: 18px;
-    box-shadow: 0 1px 2px rgba(27,48,79,.08), 0 32px 60px -24px rgba(27,48,79,.4);
-    touch-action: none;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .steps-line-fill { transition: none; }
-  .step-num { transition: none; }
-}
+/* "Cinco passos" e "Por que quase ninguém lava" migraram para o mesmo
+   carrossel vertical de ".carrossel-*" usado em "O que está incluído" —
+   ver esse bloco de CSS mais abaixo e initCarrossel em site.js. */
 
 /* Molduras de imagem com profundidade (hero, fechamento) */
 .pc-frame { position: relative; }
@@ -643,127 +564,132 @@ summary::-webkit-details-marker { display: none; }
   .hero-mobile { display: block; }
 }
 
-/* ── "O que está incluído": grade fechada em 3 colunas (2 linhas exatas),
-   sem sobra de espaço ou card órfão numa linha ─────────────────────── */
-.included-grid { grid-template-columns: repeat(3, 1fr); }
-@media (max-width: 860px) {
-  .included-grid { grid-template-columns: repeat(2, 1fr); }
-}
-
 /* ══════════════════════════════════════════════════════════════════════
-   SISTEMA DE "PILHA VERTICAL" (mobile) — compartilhado por 3 seções:
-   "O que está incluído", "Por que quase ninguém lava" e "Cinco passos".
-   Um item por vez em foco; arrastar o dedo pra cima troca pelo próximo,
-   em loop infinito. JS: initVerticalStack em site.js controla
-   --ty/--scale/--op por item e a bolinha ativa.
-
-   Os elementos utilitários (.stack-grabber, .stack-dots, .stack-hint)
-   ficam ESCONDIDOS por padrão aqui, ANTES de qualquer media query que os
-   reative — a ordem importa: como a especificidade é igual (um seletor
-   de classe), a regra que vem depois no arquivo vence em caso de empate,
-   então esta linha tem que vir antes das que os mostram, nunca depois.
+   "O que está incluído" — carrossel vertical com paginação por bolinhas
+   e setas no desktop. Loop infinito de verdade: o primeiro e o último
+   card reais têm clones ocultos (aria-hidden) nas pontas da pista; ao
+   rolar além da ponta, o JS "pula" instantaneamente para o card real
+   correspondente, sem salto visual perceptível — o mesmo efeito de loop
+   que as outras pilhas do site (.stack-*) já usam no mobile.
+   JS: initIncludedCarrossel em site.js.
    ══════════════════════════════════════════════════════════════════════ */
-.stack-hint, .stack-grabber, .stack-dots { display: none; }
-
-@media (max-width: 560px) {
-  /* Alcinha no topo do card da frente — o mesmo sinal visual de "isto
-     arrasta" usado em bottom sheets de app. */
-  .stack-grabber {
-    position: absolute;
-    top: 14px;
-    left: 50%;
-    z-index: 10;
-    width: 36px;
-    height: 4px;
-    margin-left: -18px;
-    border-radius: 3px;
-    background: rgba(27,48,79,.2);
-    pointer-events: none;
-  }
-  /* Coluna de bolinhas — fica um pouco pra fora da borda direita do
-     card, dentro do respiro lateral, marcando em qual item você está. */
-  .stack-dots {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 7px;
-    position: absolute;
-    top: 50%;
-    right: -14px;
-    z-index: 10;
-    transform: translateY(-50%);
-    pointer-events: none;
-  }
-  .stack-dots span {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(27,48,79,.2);
-    transition: background .35s var(--ease-lux), transform .35s var(--ease-lux);
-  }
-  .stack-dots span.is-active { background: var(--gold); transform: scale(1.5); }
-  .stack-hint {
+.carrossel-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 16px;
+  max-width: 640px;
+  margin: 0 auto;
+}
+.carrossel-track {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  height: clamp(500px, 80vw, 620px);
+  padding: clamp(56px, 7vw, 68px) 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  touch-action: pan-y;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+  /* O card anterior/seguinte "espia" no topo e no rodapé da pista — sem
+     isto ele corta em linha reta bem no meio da sombra do card, o que
+     parece uma barra cinza flutuando. O fade some com esse corte, indo
+     de opaco (mostra a espiada) a transparente (funde com o fundo da
+     seção) nas pontas. */
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 clamp(40px,5vw,52px), #000 calc(100% - clamp(40px,5vw,52px)), transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 clamp(40px,5vw,52px), #000 calc(100% - clamp(40px,5vw,52px)), transparent 100%);
+}
+.carrossel-track::-webkit-scrollbar { display: none; }
+.carrossel-card {
+  scroll-snap-align: center;
+  box-sizing: border-box;
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+  transition: opacity .4s ease, filter .4s ease, transform .4s ease;
+}
+.carrossel-card + .carrossel-card { margin-top: 14px; }
+.carrossel-card.is-dimmed { opacity: .4; filter: blur(2.5px); transform: scale(.92); }
+.carrossel-dots {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 10px;
+}
+.carrossel-dot {
+  display: block;
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: background .25s, height .25s;
+}
+.carrossel-dot.is-active { background: var(--gold); height: 22px; }
+.carrossel-nav { display: none; }
+@media (min-width: 860px) {
+  .carrossel-wrap { gap: 20px; max-width: 720px; }
+  .carrossel-dots { width: 34px; gap: 10px; }
+  .carrossel-nav {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    margin-top: 20px;
-    font-size: .85rem;
-    font-weight: 600;
+    flex: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1.5px solid var(--border);
     color: var(--gold-text);
+    cursor: pointer;
+    transition: background .2s, border-color .2s, transform .2s, opacity .2s;
   }
-  .stack-hint svg { animation: stack-hint-bob 1.4s ease-in-out infinite; }
+  .carrossel-nav svg { width: 14px; height: 14px; }
+  .carrossel-nav:hover { border-color: var(--gold); transform: translateY(-1px); }
+  .carrossel-prev { margin-bottom: 4px; }
+  .carrossel-next { margin-top: 4px; }
 }
+.carrossel-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 18px 0 0;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--gold-text);
+  filter: blur(0);
+  transition: opacity .6s var(--ease-lux), filter .6s var(--ease-lux);
+}
+.carrossel-hint svg { animation: stack-hint-bob 1.4s ease-in-out infinite; }
+/* Some com um desfoque suave assim que a pessoa já mexeu no carrossel uma
+   vez — ela já aprendeu o gesto, então a dica não precisa mais ocupar
+   espaço visual. Volta a aparecer normalmente só num recarregamento da
+   página (não fica guardado em nenhum storage, é por design). */
+.carrossel-hint.is-hidden { opacity: 0; filter: blur(4px); pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .carrossel-hint svg { animation: none; }
+  .carrossel-hint { transition: opacity .4s ease; filter: none !important; }
+  .carrossel-card { transition: none; }
+}
+
+/* .stack-grabber/.stack-dots (pilha antiga com arraste livre) saíram de
+   uso — as 3 seções que usavam esse sistema agora rodam no carrossel de
+   ".carrossel-*" acima. A keyframe do "arraste para ver mais" continua
+   viva porque `.carrossel-hint svg` a reaproveita. */
 @keyframes stack-hint-bob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .stack-hint svg { animation: none; }
-}
-
-/* "O que está incluído" — pilha compacta e de altura fixa; só o card da
-   frente e uma lasca do próximo (atrás, mais baixo e apagado) ficam
-   visíveis. O container fica um pouco mais estreito que a tela
-   (max-width abaixo de 100%) de propósito: essa margem sobrando nas
-   laterais não pertence à área de arraste, então o dedo consegue rolar a
-   página normalmente pousando ali, mesmo com o card "prendendo" o toque
-   verticalmente dentro dele. */
-@media (max-width: 560px) {
-  .included-grid {
-    position: relative;
-    display: block;
-    grid-template-columns: none;
-    height: 500px;
-    max-width: calc(100% - 36px);
-    margin: 0 auto;
-    /* "none" (em vez de "pan-y"): sem isto, o navegador assume que um
-       gesto vertical é para rolar a PÁGINA e nunca entrega o toque pro
-       JS arrastar o card — era por isso que o arraste não respondia. */
-    touch-action: none;
-  }
-  .included-grid > .pc-card {
-    --ty: 0px;
-    --scale: 1;
-    --op: 1;
-    position: absolute;
-    inset: 0;
-    margin: 0 !important;
-    grid-column: auto !important;
-    border-radius: 18px;
-    box-shadow: 0 1px 2px rgba(27,48,79,.08), 0 32px 60px -24px rgba(27,48,79,.4);
-    transform: translateY(var(--ty)) scale(var(--scale));
-    opacity: var(--op);
-    transition: transform 1.05s var(--ease-lux), opacity 1.05s var(--ease-lux);
-    cursor: grab;
-    touch-action: none;
-  }
-  .included-grid.is-dragging > .pc-card { transition: none; }
-  .included-grid > .pc-card:active { cursor: grabbing; }
-  .included-grid > .pc-card-dark { display: flex; align-items: center; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .included-grid > .pc-card { transition: none; }
 }
 
 /* ── Mobile: títulos centralizados e quebras de texto limpas ───────────── */
@@ -1135,90 +1061,8 @@ summary::-webkit-details-marker { display: none; }
   opacity: 1;
   margin-top: 12px;
 }
-/* Mobile: mesmo modelo de card de "Cinco passos" — selo numerado acima
-   do card (não mais sobreposto), tudo centralizado, para as 3 seções
-   empilhadas lerem como um conjunto padronizado. Corpo do texto sempre
-   aberto (sem hover no touch), já que o próprio card em foco é o que se
-   lê; só o parágrafo fica alinhado à esquerda por dentro, porque texto
-   longo centralizado fica com bordas irregulares e cansa a leitura.
-
-   IMPORTANTE — tudo aqui é prefixado com #problem-items (ou
-   #problem-timeline): .problem-item e .problem-num também são
-   reaproveitados pelo checklist da seção "Aqui não entra máquina", então
-   uma regra sem esse prefixo vaza pra lá e quebra aquele checklist
-   inteiro (foi exatamente esse bug que já aconteceu antes). */
-@media (max-width: 560px) {
-  #problem-timeline .problem-line-track, #problem-timeline .problem-line-fill { display: none; }
-  #problem-items {
-    position: relative;
-    display: block;
-    height: 380px;
-    max-width: calc(100% - 36px);
-    margin: 0 auto;
-    touch-action: none;
-  }
-  /* Especificidade alta (#problem-items em vez de só .problem-item) de
-     propósito: cada item também tem [data-reveal], cuja classe
-     .is-visible zera o transform/opacity depois da animação de entrada,
-     e precisa perder essa disputa para a pilha continuar controlando
-     transform/opacity depois disso. */
-  #problem-items .problem-item {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    gap: 14px;
-    --ty: 0px;
-    --scale: 1;
-    --op: 1;
-    transform: translateY(var(--ty)) scale(var(--scale));
-    opacity: var(--op);
-    transition: transform 1.05s var(--ease-lux), opacity 1.05s var(--ease-lux);
-    cursor: grab;
-    /* Precisa estar tanto aqui quanto no card abaixo: um filho com
-       overflow/scroll próprio pode reativar o toque nativo do navegador
-       dentro dele mesmo com o pai bloqueando — foi por isso que o
-       arraste não respondia no Android/iPhone antes. */
-    touch-action: none;
-  }
-  #problem-items.is-dragging .problem-item { transition: none; }
-  #problem-items .problem-item:active { cursor: grabbing; }
-  /* Volta a ser um selo normal, no fluxo (como o círculo do "Cinco
-     passos"), em vez de sobreposto no card — mesmo estilo, sem risco de
-     tampar texto. */
-  #problem-items .problem-num {
-    position: static;
-    flex: none;
-    width: 40px;
-    height: 40px;
-    font-size: 1.05rem;
-    background: #fff;
-    color: var(--gold-text);
-    border: 1px solid rgba(234,143,14,.45);
-  }
-  #problem-items .problem-card {
-    width: 100%;
-    box-sizing: border-box;
-    overflow: hidden;
-    touch-action: none;
-    border-radius: 18px;
-    border-color: rgba(234,143,14,.45);
-    box-shadow: 0 1px 2px rgba(27,48,79,.08), 0 32px 60px -24px rgba(27,48,79,.4);
-  }
-  #problem-items .problem-card-title { margin-top: 0; color: var(--navy); }
-  #problem-items .problem-card-body { max-height: none; opacity: 1; margin-top: 12px; }
-  #problem-items .problem-card-body-inner {
-    max-width: none;
-    font-size: .94rem;
-    line-height: 1.65;
-    text-align: left;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .problem-card-title, .problem-card-body { transition: none; }
-}
+/* "Por que quase ninguém lava" migrou para o carrossel ".carrossel-*"
+   compartilhado — ver esse bloco de CSS mais acima. */
 
 /* ── "Aqui não entra máquina": tags de tecido + checklist com régua
    dourada reaproveitando os estilos de .problem-timeline ──────────────── */
