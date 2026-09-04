@@ -420,6 +420,21 @@
       bindNav(document.getElementById(ids.navPrev), function () { goToLoop(currentIndex - 1); });
       bindNav(document.getElementById(ids.navNext), function () { goToLoop(currentIndex + 1); });
 
+      // A rodinha do mouse no desktop dispara vários eventos "wheel" bem
+      // rápido para um único giro, e o scroll-snap nativo (mesmo com
+      // scroll-snap-stop: always) às vezes não segura em cada card —
+      // acaba pulando direto do 1º pro 3º. Aqui a rodinha não rola a
+      // pista diretamente: cada giro só avança/volta um card por vez,
+      // com um intervalo mínimo entre passos para não acumular giros.
+      var wheelLocked = false;
+      track.addEventListener('wheel', function (e) {
+        e.preventDefault();
+        if (wheelLocked) return;
+        wheelLocked = true;
+        goToLoop(currentIndex + (e.deltaY > 0 ? 1 : -1));
+        setTimeout(function () { wheelLocked = false; }, 420);
+      }, { passive: false });
+
       function findClosestCard() {
         var trackRect = track.getBoundingClientRect();
         var trackCenter = trackRect.top + trackRect.height / 2;
