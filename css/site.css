@@ -821,27 +821,11 @@ summary::-webkit-details-marker { display: none; }
   .pc-card-stack { height: clamp(230px,30vh,290px); }
 }
 
-/* "O cuidado, do trilho ao trilho" (#beneficios) — reaproveita o mesmo
-   pin (.pc-why-outer/.pc-why-inner) das seções de cards, mas sem stack
-   de cards: aqui dentro fica parado o carrossel "coverflow" (mesmo
-   estilo do Portfólio, .pf-stage/.pf-slide, initCoverflow em site.js).
-   height:300vh inline no HTML = 200vh de respiro pra navegar o
-   carrossel + 100vh do pin. Ao final, a seção seguinte (Portfólio,
-   .pc-why-cover) sobe e cobre tudo, do mesmo jeito que as outras. */
-.pc-included-inner {
-  background: linear-gradient(180deg,#FBF6EB,#F7F6F3);
-  border-top: 1px solid #E6E3DC;
-  border-bottom: 1px solid #E6E3DC;
-}
-#included-stage { height: clamp(400px, 78vw, 460px); }
-@media (min-width: 900px) {
-  #included-stage { height: clamp(480px, 40vw, 560px); }
-}
-@media (prefers-reduced-motion: reduce) {
-  /* O coverflow em si (arrastar/setas) continua funcionando sem o pin —
-     só a seção para de "grudar" na tela. */
-  .pc-included-outer { height: auto !important; }
-}
+/* "O cuidado, do trilho ao trilho" (#beneficios) — mesmo carrossel
+   "coverflow" do Portfólio, sem pin/scroll stacking: #included-stage
+   usa o próprio .pf-stage do CSS (mesmo tamanho), só o conteúdo dos
+   slides muda (initCoverflow em site.js, chamado à parte pra não
+   colidir com os slides do Portfólio). */
 
 /* Seção solta só com a foto, exibida antes de cada seção com scroll
    stacking (#pc-why-outer, #steps-outer) — no mobile é aqui que a
