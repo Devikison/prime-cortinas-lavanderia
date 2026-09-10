@@ -833,15 +833,22 @@ summary::-webkit-details-marker { display: none; }
   background: linear-gradient(180deg,#FBF6EB,#F7F6F3);
   border-top: 1px solid #E6E3DC;
   border-bottom: 1px solid #E6E3DC;
+  /* Título + carrossel + legenda aqui são mais altos que nas seções de
+     cards (ícone+título+parágrafo embaixo da foto), então essa caixa
+     usa um respiro de topo menor que o padrão — em telas de notebook
+     mais baixas (~800px de altura) o conjunto inteiro não cabia nos
+     100vh grudados e cortava o final do texto do card. */
+  padding-top: clamp(64px,7vw,84px) !important;
+  padding-bottom: clamp(16px,3vw,28px) !important;
 }
 /* Cards com ícone+título+parágrafo abaixo da foto são mais altos que os
    do Portfólio (que só têm uma legenda de uma linha) — por isso esta
    caixa é maior que o .pf-stage padrão. Medido de verdade com o
    conteúdo real (não só calculado), pra não repetir o card estourando
    a caixa. */
-#included-stage { height: clamp(460px, 92vw, 520px); }
+#included-stage { height: clamp(400px, 80vw, 450px); }
 @media (min-width: 900px) {
-  #included-stage { height: clamp(540px, 46vw, 620px); }
+  #included-stage { height: clamp(500px, 36vw, 560px); }
 }
 @media (prefers-reduced-motion: reduce) {
   /* O coverflow em si (arrastar/setas) continua funcionando sem o pin —

@@ -327,3 +327,104 @@ PEGADINHAS (o que já me mordeu fazendo isso)
    último card:
    → O bloco `@media (prefers-reduced-motion: reduce)` do CSS acima já
      resolve isso (vira lista normal) — não esqueça de colar ele também.
+
+7) Em telas de notebook mais baixas (~700-800px de altura, comum!), o
+   fundo do último card corta, mesmo cabendo bem numa tela de 900px+:
+   → Não adianta só testar num monitor grande — SEMPRE meça em pelo
+     menos uma altura curta também (700-800px). Ver "COMO CALIBRAR
+     SEM CHUTAR" logo abaixo — é o item que mais retrabalho já causou.
+
+
+COMO CALIBRAR SEM CHUTAR (não repita esse erro)
+------------------------------------------------------------------------
+Calcular a altura do card "de cabeça" (aspect-ratio da imagem + altura
+estimada do texto) SEMPRE dá number errado na prática — fonte real,
+line-height, padding do navegador etc. nunca batem exato com a conta.
+Da 1ª vez que fiz isso aqui, chutei um `clamp()` pra caixa do carrossel,
+publiquei, e o card estourava a caixa (ficava com borda duplicada,
+texto cortado). Da 2ª vez, medi certo — cole isto no console do
+navegador (ou peça pro seu agente rodar via devtools) ANTES de fechar
+os números do CSS, testando em pelo menos 3-4 combinações de largura E
+altura de tela (ex.: 375×667 mobile, 768×1024 tablet, 1440×800 notebook
+baixo, 1920×1080 monitor grande — notebook baixo é o que mais pega
+gente de surpresa):
+
+  var inner   = document.querySelector('.stackscroll-inner');     // a caixa "grudada" (100vh)
+  var content = inner.querySelector(':scope > div');              // o wrapper de conteúdo lá dentro
+  var stack   = document.getElementById('MEU-STACK-stack');       // a caixa do carrossel/cards
+  var card    = stack.querySelector('.stackscroll-item, .pf-slide-card'); // um card real
+  ({
+    vh: window.innerHeight,
+    overflowDoConteudo: content.scrollHeight - inner.getBoundingClientRect().height, // > 0 = está cortando
+    caixaDoCarrossel: stack.getBoundingClientRect().height,
+    alturaDoCard: card.getBoundingClientRect().height,
+    cardCabe: card.getBoundingClientRect().height <= stack.getBoundingClientRect().height
+  })
+
+Ajuste até `overflowDoConteudo` ficar negativo (= sobra espaço) e
+`cardCabe` ficar `true` em TODAS as combinações testadas — nessa ordem
+de prioridade quando precisar cortar espaço:
+  1º reduza o padding-top/bottom do `.stackscroll-inner` (o respiro do
+     topo geralmente tem mais gordura pra cortar que o carrossel);
+  2º reduza a margem/fonte do título da seção;
+  3º só por último reduza a altura do carrossel — e nunca abaixo da
+     `alturaDoCard` medida, senão volta o bug de estourar.
+
+
+VARIANTE: SEÇÃO PINADA SEM STACK DE CARDS (só um carrossel parado)
+------------------------------------------------------------------------
+Nem toda seção "pin + a próxima cobre por cima" precisa ter cards
+trocando sozinhos com o scroll. Às vezes você só quer: a seção fica
+grudada um tempo (pra a pessoa navegar um carrossel comum, tipo
+coverflow, arrastando ou clicando nas setas, sem pressa), e só quando
+ELA rolar de propósito é que a próxima seção sobe por cima — sem
+nenhum JS de progresso/translateY.
+Nesse caso simplifique: use só `.stackscroll-outer`/`.stackscroll-inner`
+(sem `.stackscroll-stack`/`.stackscroll-item`) e NÃO chame
+`initScrollStack()` pra essa seção — o carrossel de dentro roda com o
+próprio JS dele (arrastar, setas), independente. A altura do outer
+nesse caso é só HOLD + 100 (não tem REVEAL, porque nada troca sozinho
+com o scroll):
+  altura_total_vh = HOLD + 100
+Exemplo: HOLD de 200vh pra dar tempo de navegar o carrossel = 300vh de
+altura total no outer.
+
+
+FOTO NO MOBILE: SEÇÃO PRÓPRIA ANTES, NÃO ESPREMIDA DENTRO DO PIN
+------------------------------------------------------------------------
+Se a seção pinada tem foto do lado (grid de 2 colunas: foto + cards),
+NÃO tente encolher a foto pra caber ao lado dos cards em telas
+estreitas — em mobile não sobra espaço horizontal pra isso ficar bonito
+E ainda precisa caber tudo dentro dos 100vh grudados na vertical.
+A solução que funcionou bem aqui: abaixo do breakpoint onde o grid de
+2 colunas caberia (uso 860px), a foto ganha uma SEÇÃO PRÓPRIA, solta,
+NORMAL (sem pin, sem scroll stacking), logo ANTES da seção com os
+cards. A partir de 860px essa seção solta some, e a foto passa a
+aparecer dentro do grid de 2 colunas, do lado dos cards, como no
+desktop.
+
+HTML (uma seção extra, antes da seção com scroll stacking):
+<section class="stackscroll-mobile-photo" style="background:#SUA-COR">
+  <div class="stackscroll-photo-frame">
+    <img src="..." alt="..." style="width:100%;border-radius:2px">
+  </div>
+</section>
+
+<section id="MEU-STACK-outer" class="stackscroll-outer" ...>
+  ...igual ao bloco 1) HTML acima...
+</section>
+
+CSS (some a seção solta a partir de onde o grid passa a caber; a foto
+DENTRO do grid só aparece a partir do mesmo ponto — nunca as duas ao
+mesmo tempo, e nunca nenhuma das duas em nenhuma largura):
+.stackscroll-mobile-photo { padding: clamp(48px,8vw,72px) clamp(24px,5vw,44px) 0; }
+.stackscroll-photo-frame { max-width: 380px; margin: 0 auto; }
+@media (min-width: 860px) {
+  .stackscroll-mobile-photo { display: none; }
+}
+/* a .stackscroll-photo (dentro do grid) já nasce com display:none no
+   bloco 2) CSS acima, e só vira display:block a partir de 860px — é
+   esse par de regras opostas, no MESMO breakpoint, que garante que só
+   uma apareça de cada vez. Se mudar o breakpoint de uma, mude o da
+   outra igual, senão sobra uma faixa de largura com as duas juntas ou
+   com nenhuma. */
