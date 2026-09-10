@@ -183,6 +183,11 @@
       render();
     }
     initCoverflow('pf-stage', 'pf-slide', 'pf-prev', 'pf-next');
+    // "O cuidado, do trilho ao trilho" — mesmo carrossel "coverflow" do
+    // Portfólio (reaproveita initCoverflow; a classe .pf-slide é sempre
+    // buscada só dentro do próprio #included-stage, então não colide
+    // com os slides do Portfólio).
+    initCoverflow('included-stage', 'pf-slide', 'included-prev', 'included-next');
 
     // ---- Faixa de depoimentos: auto-scroll contínuo (nunca pausa no
     // hover) que pode ser arrastado livremente com o mouse ou o dedo. O
@@ -471,7 +476,6 @@
       track.addEventListener('scroll', dismissHint, { passive: true });
       track.addEventListener('touchstart', dismissHint, { passive: true });
     }
-    initCarrossel({ track: 'included-track', dots: 'included-dots', hint: 'included-hint', navPrev: 'included-nav-prev', navNext: 'included-nav-next' });
 
     // ---- "Por que quase ninguém lava a cortina?" — scroll stacking, em
     // qualquer largura de tela (desktop com roda do mouse, mobile com o
@@ -715,6 +719,8 @@
           nome: (leadForm.querySelector('#lead-nome') || {}).value || '',
           telefone: (leadForm.querySelector('#lead-telefone') || {}).value || '',
           email: (leadForm.querySelector('#lead-email') || {}).value || '',
+          servico: (leadForm.querySelector('#lead-servico') || {}).value || '',
+          detalhes: (leadForm.querySelector('#lead-detalhes') || {}).value || '',
           page_url: location.href,
           submitted_at: new Date().toISOString()
         };
@@ -729,7 +735,7 @@
           }).catch(function () {});
         } catch (err) {}
 
-        leadForm.querySelectorAll('input').forEach(function (i) { i.disabled = true; });
+        leadForm.querySelectorAll('input, select, textarea').forEach(function (i) { i.disabled = true; });
         leadForm.querySelector('button[type="submit"]').disabled = true;
         if (leadMsg) {
           leadMsg.textContent = 'Recebemos seus dados! Vamos entrar em contato em breve.';
