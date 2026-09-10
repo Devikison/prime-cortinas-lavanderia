@@ -472,8 +472,101 @@
       track.addEventListener('touchstart', dismissHint, { passive: true });
     }
     initCarrossel({ track: 'included-track', dots: 'included-dots', hint: 'included-hint', navPrev: 'included-nav-prev', navNext: 'included-nav-next' });
-    initCarrossel({ track: 'problem-track', dots: 'problem-dots', hint: 'problem-hint', navPrev: 'problem-nav-prev', navNext: 'problem-nav-next' });
-    initCarrossel({ track: 'steps-track', dots: 'steps-dots', hint: 'steps-hint', navPrev: 'steps-nav-prev', navNext: 'steps-nav-next' });
+
+    // ---- "Por que quase ninguém lava a cortina?" — scroll stacking, em
+    // qualquer largura de tela (desktop com roda do mouse, mobile com o
+    // dedo — é o mesmo scroll nativo da página nos dois casos). A seção
+    // #pc-why-outer é bem mais alta que a tela (ver "height" em
+    // .pc-why-outer no CSS) e #pc-why-inner fica grudado (position:
+    // sticky) nela; aqui a gente lê o quanto já rolou dentro da faixa de
+    // "revelar" (data-reveal-vh) e converte em progresso 0→1, movendo
+    // cada card 02/03/04 de baixo pra cima por cima do anterior. Depois
+    // que os 4 já estão empilhados, sobra ainda a faixa de "respiro"
+    // (data-hold-vh) — nada se move nela, é só o tempo de ler o card 04
+    // em paz antes da seção seguinte (.pc-why-cover) começar a cobrir
+    // tudo. Os dois valores em vh têm que bater com a altura de
+    // .pc-why-outer no CSS — por isso ficam só ali, e o JS lê os dois
+    // via data-atributo em vez de duplicar o número aqui. ----
+    function initCardStack(ids) {
+      var outer = document.getElementById(ids.outer);
+      var stack = document.getElementById(ids.stack);
+      var hint = document.getElementById(ids.hint);
+      if (!outer || !stack) return;
+      var items = Array.prototype.slice.call(stack.querySelectorAll('.pc-card-stack-item'));
+      if (!items.length) return;
+
+      var leadVh = parseFloat(outer.dataset.leadVh) || 0;
+      var revealVh = parseFloat(outer.dataset.revealVh) || 210;
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var hintDismissed = false;
+      var ticking = false;
+
+      function dismissHint() {
+        if (hintDismissed || !hint) return;
+        hintDismissed = true;
+        hint.classList.add('is-hidden');
+      }
+
+      function apply(progress) {
+        // (items.length - 1) transições: 02 cobre 01, 03 cobre 02, 04
+        // cobre 03. Cada uma ocupa uma fatia igual do progresso total.
+        // Cada card i (i>=1) nasce translateY(100%) — uma altura inteira
+        // abaixo, cortado pelo overflow:hidden do #problem-stack, ou
+        // seja, totalmente invisível — e desliza até translateY(0),
+        // cobrindo o card anterior por completo. Sem fade: é show, não
+        // sopa — só um card por vez ocupa o espaço, e dá pra reverter
+        // voltando o scroll porque tudo depende só de "progress".
+        var steps = items.length - 1;
+        items.forEach(function (item, i) {
+          if (i === 0) return;
+          var segStart = (i - 1) / steps;
+          var segEnd = i / steps;
+          var local = (progress - segStart) / (segEnd - segStart);
+          local = Math.max(0, Math.min(1, local));
+          // easeOutCubic — chega suave, sem quicar no fim.
+          var eased = 1 - Math.pow(1 - local, 3);
+          var translate = (1 - eased) * 100;
+          item.style.transform = 'translateY(' + translate + '%)';
+        });
+        if (progress > .02) dismissHint();
+      }
+
+      function update() {
+        ticking = false;
+        var rect = outer.getBoundingClientRect();
+        var vh = window.innerHeight / 100;
+        var leadPx = leadVh * vh; // respiro antes de começar a trocar o card 01
+        var revealPx = revealVh * vh; // só a faixa de "empilhar" — o resto é respiro (lead + hold)
+        if (revealPx <= 0) return;
+        var scrolled = -rect.top - leadPx;
+        var progress = scrolled / revealPx;
+        progress = Math.max(0, Math.min(1, progress));
+        apply(progress);
+      }
+
+      function onScroll() {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }
+
+      // 'scroll' não borbulha — se o elemento que rola de verdade for o
+      // <body> (em vez da janela, como acontece em alguns contextos de
+      // preview/iframe), um listener só na window nunca dispara. Capture
+      // na window pega o evento a caminho do alvo mesmo assim, e o
+      // listener direto no body cobre o caso comum também. touchmove
+      // entra também pra atualizar durante o gesto no mobile, não só
+      // depois que o dedo solta.
+      if (!reduce) {
+        window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+        document.body.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('touchmove', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        update();
+      }
+    }
+    initCardStack({ outer: 'pc-why-outer', stack: 'problem-stack', hint: 'problem-hint' });
+    initCardStack({ outer: 'steps-outer', stack: 'steps-stack', hint: 'steps-hint' });
 
     // ---- Sliders "antes e depois": arraste com mouse, dedo ou teclado
     // (setas) revela a foto de "antes" por baixo da de "depois". ----
@@ -602,10 +695,11 @@
     }
 
     // ---- Formulário "A gente te chama" ----
-    // AINDA SEM BACKEND: só valida e mostra a confirmação visual. Os
-    // dados não são enviados nem salvos em lugar nenhum até decidirmos
-    // onde gravar (Supabase, Google Sheets, Formspree etc.) e trocarmos
-    // este bloco por um fetch/POST de verdade para lá.
+    // Ao enviar, dispara os dados do formulário + UTMs capturadas + URL da
+    // página para o webhook do n8n. O envio é "fire and forget": mesmo que
+    // o webhook falhe (rede, servidor fora do ar), a pessoa já vê a
+    // confirmação visual — não faz sentido travar o lead por causa disso.
+    var LEAD_WEBHOOK_URL = 'https://n8n-n8n-start.dnjlb7.easypanel.host/webhook/prime-cortinas';
     var leadForm = document.getElementById('lead-form');
     if (leadForm) {
       var leadMsg = document.getElementById('lead-form-msg');
@@ -616,6 +710,25 @@
           return;
         }
         dl({ event: 'lead_form_submit' });
+
+        var payload = {
+          nome: (leadForm.querySelector('#lead-nome') || {}).value || '',
+          telefone: (leadForm.querySelector('#lead-telefone') || {}).value || '',
+          email: (leadForm.querySelector('#lead-email') || {}).value || '',
+          page_url: location.href,
+          submitted_at: new Date().toISOString()
+        };
+        UTM_KEYS.forEach(function (k) { payload[k] = utmStore[k] || ''; });
+
+        try {
+          fetch(LEAD_WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            keepalive: true
+          }).catch(function () {});
+        } catch (err) {}
+
         leadForm.querySelectorAll('input').forEach(function (i) { i.disabled = true; });
         leadForm.querySelector('button[type="submit"]').disabled = true;
         if (leadMsg) {

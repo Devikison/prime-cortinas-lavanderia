@@ -156,7 +156,13 @@ body {
   font-family: 'Montserrat', system-ui, -apple-system, sans-serif;
   font-weight: 500;
   -webkit-font-smoothing: antialiased;
-  overflow-x: hidden;
+  /* Sem overflow-x aqui de propósito: o "html" acima já clipa a rolagem
+     horizontal da página inteira. Se o body também define overflow
+     não-visible, ele vira um "container de rolagem" próprio aos olhos
+     do position: sticky (mesmo sem rolar de verdade, já que quem rola a
+     página é o html) — e qualquer sticky dentro dele (como a pilha de
+     cards de "Por que quase ninguém lava") trava, pinado no lugar
+     errado. Duplicar overflow-x:hidden aqui foi o que causava isso. */
   width: 100%;
 }
 
@@ -696,6 +702,151 @@ summary::-webkit-details-marker { display: none; }
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-5px); }
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   "Por que quase ninguém lava a cortina?" — scroll stacking, em qualquer
+   tamanho de tela (desktop com roda do mouse, mobile com o dedo — é o
+   mesmo scroll nativo da página nos dois casos, só muda o gesto).
+   A seção fica "grudada" na tela (position: sticky) por uma altura de
+   rolagem maior que ela mesma; o JS (initCardStack em site.js) lê o
+   quanto já rolou dentro dessa faixa e converte em progresso 0→1,
+   movendo cada card 02/03/04 de baixo pra cima por cima do anterior.
+   Essa faixa é dividida em duas partes, os números vêm dos atributos
+   data-reveal-vh/data-hold-vh aqui embaixo (o JS lê de lá, não duplica
+   os valores):
+     1) REVEAL (empilhar): os cards vão trocando, um de cada vez.
+     2) HOLD (respiro): os 4 cards já empilhados, card 04 parado e
+        legível na tela, SEM nada acontecendo — é a pausa que faltava
+        antes; sem ela o card 04 mal aparecia e a seção de baixo já
+        entrava em cima, sem dar tempo de ler.
+   Só depois do HOLD é que a seção "Solução" (.pc-why-cover, margin-top
+   negativo) desliza por cima, cobrindo esta seção inteira do mesmo
+   jeito que um card cobre o outro — ver o comentário em .pc-why-cover
+   mais abaixo pra essa conta fechar com o HOLD. ══════════════════ */
+.pc-why-outer {
+  position: relative;
+  /* LEAD (45vh, respiro antes de trocar o card 01) + REVEAL (3
+     transições × 70vh) + HOLD (100vh, respiro depois do card 04) + PIN
+     (100vh, a "tela" que fica grudada) — se mudar aqui, mude também os
+     atributos data-lead-vh/data-reveal-vh/data-hold-vh no HTML e o
+     -100vh de .pc-why-cover. */
+  height: 455vh;
+}
+.pc-why-inner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* corrige o "pulo" da barra de endereço sumir/aparecer no mobile */
+  display: flex;
+  align-items: center;
+  padding: clamp(96px,15vw,150px) clamp(20px,5vw,44px) clamp(20px,4vw,40px);
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #fff;
+  z-index: 1;
+}
+.pc-why-photo {
+  margin: 0 auto;
+  display: none;
+  width: min(100%, 380px);
+}
+.pc-card-stack {
+  position: relative;
+  height: clamp(220px,44vh,290px);
+  margin: clamp(16px,3vh,26px) 0;
+  /* Esconde de verdade quem ainda não chegou — sem isto, um card que só
+     está "um pouco" deslocado pra baixo continua aparecendo por cima
+     do card da vez (foi exatamente o que deu aquela sopa de texto
+     ilegível). Com o corte aqui, um card fora do lugar (translateY
+     100%, uma altura inteira abaixo) some de verdade, e só reaparece
+     deslizando por cima conforme a rolagem avança. */
+  overflow: hidden;
+  border-radius: 14px;
+}
+.pc-card-stack-item {
+  position: absolute;
+  inset: 0;
+  transform: translateY(0);
+  will-change: transform;
+}
+.pc-card-stack-item .pc-card { height: 100%; overflow: auto; }
+.pc-card-stack-item .pc-card:hover { transform: none; }
+.pc-card-stack-item[data-stack-i="0"] { z-index: 1; }
+.pc-card-stack-item[data-stack-i="1"] { z-index: 2; }
+.pc-card-stack-item[data-stack-i="2"] { z-index: 3; }
+.pc-card-stack-item[data-stack-i="3"] { z-index: 4; }
+.pc-card-stack-item[data-stack-i="4"] { z-index: 5; }
+.pc-why-progress {
+  /* Bolinhas de progresso removidas a pedido — o card já deixa claro
+     onde está (01/02/03/04 no badge), não precisa de indicador extra. */
+  display: none;
+}
+.pc-why-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--border);
+  transition: background .25s, width .25s;
+}
+.pc-why-dot.is-active { background: var(--gold); width: 22px; border-radius: 999px; }
+.pc-why-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--gold-text);
+  transition: opacity .6s var(--ease-lux), filter .6s var(--ease-lux);
+}
+.pc-why-hint svg { animation: stack-hint-bob 1.4s ease-in-out infinite; }
+.pc-why-hint.is-hidden { opacity: 0; filter: blur(4px); pointer-events: none; }
+.pc-why-cta { margin: clamp(14px,3vh,28px) 0 0; }
+
+/* A partir daqui cabe uma fotinho ao lado, sem apertar os cards. */
+@media (min-width: 560px) {
+  .pc-why-inner { padding-left: clamp(24px,5vw,44px); padding-right: clamp(24px,5vw,44px); }
+  .pc-why-photo { display: block; width: min(46vw, 190px); }
+  .pc-card-stack { height: clamp(200px,34vh,260px); }
+}
+@media (min-width: 860px) {
+  .pc-why-photo { width: min(100%, 380px); }
+  .pc-card-stack { height: clamp(230px,30vh,290px); }
+}
+
+/* A seção seguinte "sobe" e cobre esta por inteiro: puxada 100vh pra
+   cima (a mesma altura da caixa grudada acima) e com z-index maior +
+   fundo opaco, ela desliza por cima só depois do HOLD (ver
+   .pc-why-outer acima) — dando tempo de ler o card 04 antes de
+   qualquer coisa começar a subir. */
+.pc-why-cover {
+  position: relative;
+  z-index: 2;
+  margin-top: -100vh;
+  background: #F7F6F3;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Sem JS animando (ele nem liga o listener nesse caso), os 4 cards
+     viram uma lista normal, todos legíveis de uma vez — em vez de
+     ficarem empilhados parados um em cima do outro, o que esconderia
+     01/02/03 pra sempre atrás do 04. */
+  .pc-why-outer { height: auto !important; }
+  .pc-why-inner { position: static; height: auto; overflow: visible; padding-top: clamp(24px,5vw,44px); }
+  .pc-why-photo { display: block; width: min(100%, 380px); }
+  .pc-card-stack { position: static; height: auto; overflow: visible; }
+  .pc-card-stack-item {
+    position: static;
+    transform: none !important;
+    transition: none !important;
+  }
+  .pc-card-stack-item + .pc-card-stack-item { margin-top: 14px; }
+  .pc-why-hint { display: none; }
+  .pc-why-cover { margin-top: 0; }
+}
+
 
 /* ── Mobile: títulos centralizados e quebras de texto limpas ───────────── */
 @media (max-width: 700px) {

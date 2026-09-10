@@ -1,0 +1,329 @@
+════════════════════════════════════════════════════════════════════════
+MECÂNICA: "SCROLL STACKING" (cards empilhando + seção cobrindo a seguinte)
+Feito e testado na LP da Prime Cortinas — reutilizável em qualquer landing
+page estática (HTML + CSS + JS puro, sem lib nenhuma).
+════════════════════════════════════════════════════════════════════════
+
+O QUE É
+--------
+Uma seção com N cards (motivos, passos, benefícios...) onde:
+  1) A seção "gruda" na tela (position: sticky) por uma rolagem mais longa
+     que ela mesma.
+  2) Os cards vão trocando um por vez: o próximo sobe de baixo pra cima e
+     cobre o anterior por completo (sem fade, sem sobreposição de texto).
+  3) Depois do último card, tem uma PAUSA (nada se move) — pra não parecer
+     que a seção "foge" antes de dar tempo de ler.
+  4) Só depois da pausa, a PRÓXIMA seção da página sobe e cobre esta
+     inteira, com o mesmo efeito de "um cobre o outro" — só que em nível
+     de seção, não de card.
+
+Do lado (opcional) dá pra deixar uma foto fixa, parada, enquanto os cards
+empilham ao lado dela — ela já fica parada de graça, porque está dentro da
+mesma caixa "grudada".
+
+
+COMO FUNCIONA (a ideia, sem código)
+------------------------------------
+- CSS puro faz o "grudar" (position: sticky) e o "cobrir a seção seguinte"
+  (margin-top negativo + z-index). Isso é 100% CSS, sem JS.
+- JS só faz UMA coisa: lê o quanto já rolou dentro da faixa reservada pros
+  cards, converte isso em progresso de 0 a 1, e usa esse progresso pra
+  mover cada card (translateY, de 100% até 0%) — sem depender de nenhuma
+  lib de scroll (GSAP, ScrollTrigger etc.), só scroll nativo da página.
+- Cada card nasce DESLOCADO PRA BAIXO exatamente 1 altura de container
+  (translateY(100%)) e escondido de verdade por um overflow:hidden no
+  container — não é opacidade reduzida nem meio-escondido, é 100%
+  invisível até chegar a vez dele. Isso evita a "sopa de texto" (cards
+  meio-transparentes se sobrepondo, ilegível) que é o erro mais comum
+  nesse tipo de efeito.
+- A altura total da seção (em vh) é dividida em 4 pedaços — dá pra ajustar
+  cada um independente:
+    LEAD  → respiro ANTES de trocar o primeiro card (a pessoa não sente
+            que precisa "ter cuidado" assim que a seção aparece).
+    REVEAL→ a troca de cards em si (N-1 transições, uma fatia igual do
+            progresso pra cada).
+    HOLD  → respiro DEPOIS do último card, antes de qualquer coisa
+            começar a subir por cima.
+    PIN   → sempre = 100vh, é a "tela" que fica grudada (não conta como
+            tempo extra, é só o tamanho da janela).
+
+
+ARQUIVOS: 3 blocos (HTML + CSS + JS)
+══════════════════════════════════════════════════════════════════════
+
+1) HTML — estrutura da seção
+------------------------------------------------------------------------
+<section id="MEU-STACK-outer" class="stackscroll-outer"
+         data-lead-vh="45" data-reveal-vh="210" data-hold-vh="100"
+         style="height:455vh">
+  <!-- height = lead + reveal + hold + 100 (pin). Recalcule sempre que
+       mudar lead/reveal/hold — ver "COMO CALCULAR A ALTURA" abaixo. -->
+
+  <div class="stackscroll-inner">
+    <div class="two-col-grid stackscroll-grid"
+         style="max-width:1280px;margin:0 auto;display:grid;
+                grid-template-columns:minmax(260px,1fr) minmax(360px,1.5fr);
+                gap:clamp(40px,6vw,72px);align-items:center;width:100%">
+
+      <!-- Coluna da foto (opcional — pode remover as 2 colunas e usar só
+           a dos cards, com stackscroll-grid virando 1 coluna) -->
+      <div class="stackscroll-photo">
+        <!-- <img src="..." alt="..." style="width:100%;border-radius:2px"> -->
+      </div>
+
+      <div class="stackscroll-col">
+        <div style="margin:0 0 clamp(24px,3vw,32px)">
+          <h2>Título da seção</h2>
+          <p>Texto de apoio (opcional).</p>
+        </div>
+
+        <div class="stackscroll-stack" id="MEU-STACK-stack">
+          <!-- um .stackscroll-item por card, data-stack-i começando em 0 -->
+          <div class="stackscroll-item" data-stack-i="0">
+            <div class="meu-card">Conteúdo do card 1</div>
+          </div>
+          <div class="stackscroll-item" data-stack-i="1">
+            <div class="meu-card">Conteúdo do card 2</div>
+          </div>
+          <div class="stackscroll-item" data-stack-i="2">
+            <div class="meu-card">Conteúdo do card 3</div>
+          </div>
+          <!-- ... quantos cards quiser ... -->
+        </div>
+
+        <p class="stackscroll-hint" id="MEU-STACK-hint">Role para ver mais</p>
+
+        <div class="stackscroll-cta">
+          <a href="#" class="btn-primary">Botão de ação</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- A PRÓXIMA seção da página (a que vai "cobrir" esta) só precisa de
+     uma classe a mais — o resto do HTML dela fica igual: -->
+<section id="proxima-secao" class="stackscroll-cover" style="background:#FUNDO-OPACO-AQUI">
+  ...conteúdo normal da próxima seção...
+</section>
+
+
+2) CSS — cole isso no seu stylesheet (ajuste as cores/fonte se quiser)
+------------------------------------------------------------------------
+.stackscroll-outer { position: relative; }
+.stackscroll-inner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh; /* evita o "pulo" da barra de endereço no mobile */
+  display: flex;
+  align-items: center;
+  padding: clamp(96px,15vw,150px) clamp(20px,5vw,44px) clamp(20px,4vw,40px);
+  box-sizing: border-box;
+  overflow: hidden;
+  background: #fff; /* precisa ser opaco */
+  z-index: 1;
+}
+.stackscroll-photo { margin: 0 auto; display: none; width: min(100%, 380px); }
+@media (min-width: 560px) {
+  .stackscroll-photo { display: block; width: min(46vw, 190px); }
+}
+@media (min-width: 860px) {
+  .stackscroll-photo { width: min(100%, 380px); }
+}
+
+.stackscroll-stack {
+  position: relative;
+  height: clamp(220px,44vh,290px);
+  margin: clamp(16px,3vh,26px) 0;
+  overflow: hidden;      /* ESSENCIAL: esconde de verdade quem não chegou */
+  border-radius: 14px;
+}
+@media (min-width: 560px) { .stackscroll-stack { height: clamp(200px,34vh,260px); } }
+@media (min-width: 860px) { .stackscroll-stack { height: clamp(230px,30vh,290px); } }
+
+.stackscroll-item {
+  position: absolute;
+  inset: 0;
+  transform: translateY(0);
+  will-change: transform;
+}
+/* Um z-index crescente por card — o de cima precisa ganhar do de baixo.
+   Gere um pra cada card que você tiver (nth-of-type resolve sem precisar
+   escrever um seletor por índice): */
+.stackscroll-item:nth-of-type(1) { z-index: 1; }
+.stackscroll-item:nth-of-type(2) { z-index: 2; }
+.stackscroll-item:nth-of-type(3) { z-index: 3; }
+.stackscroll-item:nth-of-type(4) { z-index: 4; }
+.stackscroll-item:nth-of-type(5) { z-index: 5; }
+/* ...continue se tiver mais cards... */
+
+.stackscroll-hint {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin: 12px 0 0; transition: opacity .6s ease, filter .6s ease;
+}
+.stackscroll-hint.is-hidden { opacity: 0; filter: blur(4px); pointer-events: none; }
+.stackscroll-cta { margin: clamp(14px,3vh,28px) 0 0; }
+
+/* A seção seguinte sobe e cobre esta por inteiro: puxada 100vh pra cima
+   (a mesma altura do PIN) e com z-index maior + fundo opaco, desliza por
+   cima só depois do HOLD (porque o "outer" já reservou espaço extra pra
+   isso — ver "COMO CALCULAR A ALTURA"). */
+.stackscroll-cover { position: relative; z-index: 2; margin-top: -100vh; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Sem JS animando (ele nem liga o listener nesse caso), os cards viram
+     lista normal — importante pra não esconder os cards de trás pra
+     sempre atrás do último. */
+  .stackscroll-outer { height: auto !important; }
+  .stackscroll-inner { position: static; height: auto; overflow: visible; }
+  .stackscroll-photo { display: block; }
+  .stackscroll-stack { position: static; height: auto; overflow: visible; }
+  .stackscroll-item { position: static; transform: none !important; transition: none !important; }
+  .stackscroll-item + .stackscroll-item { margin-top: 14px; }
+  .stackscroll-hint { display: none; }
+  .stackscroll-cover { margin-top: 0; }
+}
+
+
+3) JS — cole isso no seu script (funciona em qualquer largura de tela,
+   desktop com roda do mouse e mobile com o dedo)
+------------------------------------------------------------------------
+function initScrollStack(ids) {
+  var outer = document.getElementById(ids.outer);
+  var stack = document.getElementById(ids.stack);
+  var hint = document.getElementById(ids.hint);
+  if (!outer || !stack) return;
+  var items = Array.prototype.slice.call(stack.querySelectorAll('.stackscroll-item'));
+  if (!items.length) return;
+
+  var leadVh = parseFloat(outer.dataset.leadVh) || 0;
+  var revealVh = parseFloat(outer.dataset.revealVh) || 210;
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hintDismissed = false;
+  var ticking = false;
+
+  function dismissHint() {
+    if (hintDismissed || !hint) return;
+    hintDismissed = true;
+    hint.classList.add('is-hidden');
+  }
+
+  function apply(progress) {
+    var steps = items.length - 1;
+    items.forEach(function (item, i) {
+      if (i === 0) return;
+      var segStart = (i - 1) / steps;
+      var segEnd = i / steps;
+      var local = (progress - segStart) / (segEnd - segStart);
+      local = Math.max(0, Math.min(1, local));
+      var eased = 1 - Math.pow(1 - local, 3); // easeOutCubic
+      var translate = (1 - eased) * 100;
+      item.style.transform = 'translateY(' + translate + '%)';
+    });
+    if (progress > .02) dismissHint();
+  }
+
+  function update() {
+    ticking = false;
+    var rect = outer.getBoundingClientRect();
+    var vh = window.innerHeight / 100;
+    var leadPx = leadVh * vh;
+    var revealPx = revealVh * vh;
+    if (revealPx <= 0) return;
+    var scrolled = -rect.top - leadPx;
+    var progress = Math.max(0, Math.min(1, scrolled / revealPx));
+    apply(progress);
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    window.requestAnimationFrame(update);
+  }
+
+  // 'scroll' não borbulha — se o elemento que rola de verdade não for a
+  // window (acontece em iframes/previews, ou se algum <body> por aí tiver
+  // overflow não-visible — ver PEGADINHA #1 abaixo), um listener só na
+  // window nunca dispara. Capture pega o evento a caminho do alvo mesmo
+  // assim, e o listener direto no body cobre o caso comum.
+  if (!reduce) {
+    window.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    document.body.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('touchmove', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+  }
+}
+
+// Uma chamada por seção que usar o efeito:
+initScrollStack({ outer: 'MEU-STACK-outer', stack: 'MEU-STACK-stack', hint: 'MEU-STACK-hint' });
+
+
+COMO CALCULAR A ALTURA DO "outer" (o height:XXXvh no HTML)
+------------------------------------------------------------------------
+altura_total_vh = LEAD + REVEAL + HOLD + 100
+
+Onde:
+  - LEAD, REVEAL, HOLD são os mesmos números dos atributos
+    data-lead-vh / data-reveal-vh / data-hold-vh.
+  - REVEAL = (número de cards - 1) × tempo por transição.
+    Ex.: 4 cards → 3 transições. Com ~70vh por transição, REVEAL = 210.
+         5 cards → 4 transições → REVEAL = 280.
+  - 100 é sempre fixo (é o PIN, a "tela" grudada).
+
+Exemplos já testados nesta LP:
+  4 cards → lead 45 + reveal 210 (3×70) + hold 100 + 100 = 455vh
+  5 cards → lead 45 + reveal 280 (4×70) + hold 100 + 100 = 525vh
+
+Se mudar qualquer um dos 3 números (lead/reveal/hold), atualize os DOIS
+lugares: os atributos data-* no HTML E o height:XXXvh do mesmo elemento.
+O -100vh do .stackscroll-cover NÃO muda (é sempre igual ao PIN = 100vh).
+
+
+PARA VÁRIAS SEÇÕES NA MESMA PÁGINA
+------------------------------------------------------------------------
+Dá pra repetir o bloco quantas vezes quiser — cada seção com scroll
+stacking cobre a seção logo depois dela (que só precisa da classe
+.stackscroll-cover, nada mais). Só troque os IDs (MEU-STACK-outer,
+MEU-STACK-stack, MEU-STACK-hint) pra não colidir, e chame
+initScrollStack() de novo com os novos IDs.
+
+
+PEGADINHAS (o que já me mordeu fazendo isso)
+------------------------------------------------------------------------
+1) O position:sticky simplesmente NÃO GRUDA e nada acontece:
+   → Verifique se `body` (ou qualquer ancestral da seção) tem
+     `overflow-x: hidden` SEM um `overflow-y` explícito. Isso faz o
+     `overflow-y` computar como `auto` sozinho (regra do CSS), e mesmo
+     que a rolagem de verdade aconteça no `html`, o `body` passa a contar
+     como "container de rolagem" pros cálculos de sticky — e como ele
+     nunca rola de fato, o sticky trava, sem erro nenhum no console.
+     SOLUÇÃO: deixe `overflow-x: hidden` só no `<html>`, nunca duplicado
+     no `<body>`.
+
+2) Os cards aparecem todos ao mesmo tempo, texto embaralhado:
+   → Confirme que `.stackscroll-stack` tem `overflow: hidden` e que cada
+     `.stackscroll-item` nasce em `translateY(100%)` (não um valor
+     pequeno tipo 48px — precisa ser 100% pra sumir de vez).
+
+3) O último card mal aparece e a seção de baixo já cobre tudo:
+   → Falta HOLD (ou está baixo demais). Aumente `data-hold-vh` e o
+     `height` do outer junto.
+
+4) No mobile o layout "estoura" pra fora da tela (100vh maior que a
+   parte visível, por causa da barra de endereço):
+   → Use `height:100vh; height:100dvh;` no `.stackscroll-inner` (dvh
+     corrige, vh fica de fallback pra navegador antigo).
+
+5) O efeito atrapalha em telas muito baixas (conteúdo cortado):
+   → `overflow:hidden` no `.stackscroll-inner` já esconde o excesso sem
+     quebrar layout — mas se sobrar pouco espaço, tire a foto ou reduza
+     o `.stackscroll-stack` (o `clamp()` já ajuda, ajuste os valores).
+
+6) Quem usa "reduzir movimento" (acessibilidade) trava vendo só o
+   último card:
+   → O bloco `@media (prefers-reduced-motion: reduce)` do CSS acima já
+     resolve isso (vira lista normal) — não esqueça de colar ele também.
