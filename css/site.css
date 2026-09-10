@@ -105,6 +105,11 @@
    ainda cabem (ou pior, "cabem" mas comprimem o conteúdo lateralmente). */
 @media (max-width: 760px) {
   .two-col-grid { grid-template-columns: 1fr !important; }
+  /* Na seção "Aqui não entra máquina", a foto tem order:2 pra ficar do
+     lado esquerdo no grid do desktop — mas com o grid virando 1 coluna
+     no mobile, esse order manteria a foto DEPOIS do texto. Aqui força
+     a foto pra cima, antes de qualquer texto, só nessa largura. */
+  .solution-photo { order: -1 !important; }
 }
 
 :root {
@@ -846,7 +851,7 @@ summary::-webkit-details-marker { display: none; }
    caixa é maior que o .pf-stage padrão. Medido de verdade com o
    conteúdo real (não só calculado), pra não repetir o card estourando
    a caixa. */
-#included-stage { height: clamp(400px, 80vw, 450px); }
+#included-stage { height: clamp(440px, 90vw, 480px); }
 @media (min-width: 900px) {
   #included-stage { height: clamp(500px, 36vw, 560px); }
 }
