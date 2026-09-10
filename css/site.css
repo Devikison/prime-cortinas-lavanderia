@@ -821,11 +821,33 @@ summary::-webkit-details-marker { display: none; }
   .pc-card-stack { height: clamp(230px,30vh,290px); }
 }
 
-/* "O cuidado, do trilho ao trilho" (#beneficios) — mesmo carrossel
-   "coverflow" do Portfólio, sem pin/scroll stacking: #included-stage
-   usa o próprio .pf-stage do CSS (mesmo tamanho), só o conteúdo dos
-   slides muda (initCoverflow em site.js, chamado à parte pra não
-   colidir com os slides do Portfólio). */
+/* "O cuidado, do trilho ao trilho" (#beneficios) — reaproveita o mesmo
+   pin (.pc-why-outer/.pc-why-inner) das outras seções, mas sem stack de
+   cards: aqui dentro fica parado o carrossel "coverflow" (mesmo estilo
+   e mesmo tamanho do Portfólio — #included-stage usa o .pf-stage
+   padrão, sem overrides de altura, por isso não estoura mais a caixa).
+   height:300vh no HTML = 200vh de respiro pra navegar o carrossel (só
+   avança se a pessoa rolar de propósito) + 100vh do pin. No fim, a
+   seção seguinte (Portfólio, .pc-why-cover) sobe e cobre tudo. */
+.pc-included-inner {
+  background: linear-gradient(180deg,#FBF6EB,#F7F6F3);
+  border-top: 1px solid #E6E3DC;
+  border-bottom: 1px solid #E6E3DC;
+}
+/* Cards com ícone+título+parágrafo abaixo da foto são mais altos que os
+   do Portfólio (que só têm uma legenda de uma linha) — por isso esta
+   caixa é maior que o .pf-stage padrão. Medido de verdade com o
+   conteúdo real (não só calculado), pra não repetir o card estourando
+   a caixa. */
+#included-stage { height: clamp(460px, 92vw, 520px); }
+@media (min-width: 900px) {
+  #included-stage { height: clamp(540px, 46vw, 620px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* O coverflow em si (arrastar/setas) continua funcionando sem o pin —
+     só a seção para de "grudar" na tela. */
+  #beneficios.pc-why-outer { height: auto !important; }
+}
 
 /* Seção solta só com a foto, exibida antes de cada seção com scroll
    stacking (#pc-why-outer, #steps-outer) — no mobile é aqui que a
