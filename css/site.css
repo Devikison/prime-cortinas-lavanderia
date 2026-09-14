@@ -709,41 +709,181 @@ summary::-webkit-details-marker { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   "Por que quase ninguém lava a cortina?" — scroll stacking, em qualquer
-   tamanho de tela (desktop com roda do mouse, mobile com o dedo — é o
-   mesmo scroll nativo da página nos dois casos, só muda o gesto).
-   A seção fica "grudada" na tela (position: sticky) por uma altura de
-   rolagem maior que ela mesma; o JS (initCardStack em site.js) lê o
-   quanto já rolou dentro dessa faixa e converte em progresso 0→1,
-   movendo cada card 02/03/04 de baixo pra cima por cima do anterior.
-   Essa faixa é dividida em duas partes, os números vêm dos atributos
-   data-reveal-vh/data-hold-vh aqui embaixo (o JS lê de lá, não duplica
-   os valores):
-     1) REVEAL (empilhar): os cards vão trocando, um de cada vez.
-     2) HOLD (respiro): os 4 cards já empilhados, card 04 parado e
-        legível na tela, SEM nada acontecendo — é a pausa que faltava
-        antes; sem ela o card 04 mal aparecia e a seção de baixo já
-        entrava em cima, sem dar tempo de ler.
-   Só depois do HOLD é que a seção "Solução" (.pc-why-cover, margin-top
-   negativo) desliza por cima, cobrindo esta seção inteira do mesmo
-   jeito que um card cobre o outro — ver o comentário em .pc-why-cover
-   mais abaixo pra essa conta fechar com o HOLD. ══════════════════ */
-.pc-why-outer {
+   SCROLL STACKING — "os cards vão se juntando conforme rola"
+   Usado em "Por que quase ninguém lava a cortina?" (#pc-why-outer) e em
+   "Cinco passos, e você não sobe em escada nenhuma" (#steps-outer).
+
+   COMO FUNCIONA: CSS puro, sem JS e sem lib nenhuma. Cada card é
+   position:sticky com um `top` um pouquinho maior que o do card
+   anterior (--pc-stack-step por posição). Conforme a página rola, o
+   card da vez sobe, encosta no topo e TRAVA ali; o próximo continua
+   subindo e para logo abaixo dele — e assim os cards vão se juntando
+   numa pilha, com a beirada de cada um ainda à mostra por baixo do
+   seguinte. Rolando pra trás, a pilha se desfaz sozinha na ordem
+   inversa (é o navegador fazendo, não tem estado nenhum pra reverter).
+
+   POR QUE ISTO E NÃO O MODELO ANTIGO (seção grudada + JS movendo card
+   por card): aqui o conteúdo continua em fluxo normal, então a altura
+   da seção é a altura real do conteúdo — acabou o `height:455vh`
+   calculado na mão que precisava ser refeito toda vez que um texto
+   mudava, e acabou o card estourando a caixa de altura fixa em tela
+   baixa. Cada card cresce conforme o texto que tem dentro, e o efeito
+   funciona igual em qualquer tamanho de tela, inclusive com JS
+   desligado. ═══════════════════════════════════════════════════════ */
+.pc-stack-sec {
   position: relative;
-  /* LEAD (45vh, respiro antes de trocar o card 01) + REVEAL (3
-     transições × 70vh) + HOLD (100vh, respiro depois do card 04) + PIN
-     (100vh, a "tela" que fica grudada) — se mudar aqui, mude também os
-     atributos data-lead-vh/data-reveal-vh/data-hold-vh no HTML e o
-     -100vh de .pc-why-cover. */
-  height: 455vh;
+  padding: clamp(56px,8vw,96px) clamp(24px,5vw,44px) clamp(72px,10vw,120px);
 }
+.pc-stack-grid {
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(28px,5vw,44px);
+  /* `start`, e não `center`: com `center` o item da coluna da foto é
+     centralizado dentro da linha inteira do grid e não sobra folga pro
+     sticky correr — a foto simplesmente não gruda. */
+  align-items: start;
+}
+/* Abaixo de 860px vira uma coluna só: a foto em cima, os cards embaixo.
+   É isso que substituiu a antiga seção-extra só com a foto
+   (.pc-mobile-photo) — ela só existia porque a foto não cabia espremida
+   dentro dos 100vh da seção grudada; sem o pin, o próprio grid resolve. */
+@media (min-width: 860px) {
+  .pc-stack-grid {
+    grid-template-columns: minmax(260px,1fr) minmax(360px,1.5fr);
+    gap: clamp(40px,6vw,72px);
+  }
+}
+.pc-stack-aside { width: min(100%, 380px); margin: 0 auto; }
+@media (min-width: 860px) {
+  /* A foto fica parada enquanto os cards se juntam do lado dela.
+     ATENÇÃO: o [data-reveal] (que anima com transform) fica na div de
+     DENTRO, nunca aqui — transform no próprio sticky, ou em qualquer
+     ancestral dele, mata o position:sticky sem dar erro nenhum. */
+  .pc-stack-aside { position: sticky; top: clamp(88px,13vh,116px); }
+}
+.pc-stack-head { margin: 0 0 clamp(20px,3vw,30px); }
+
+.pc-stack {
+  /* --pc-stack-top: altura do cabeçalho fixo + um respiro. É onde o
+       primeiro card trava. O cabeçalho tem 73px e é TRANSLÚCIDO
+       (backdrop-filter), então não basta passar de 73: se a pilha parar
+       colada nele, as beiradas dos cards de trás ficam borradas por
+       baixo do vidro e somem. Daí o mínimo de 97px, que dá uns 24px de
+       folga limpa embaixo do cabeçalho mesmo na tela mais baixa.
+     --pc-stack-step: o quanto cada card para mais embaixo que o
+       anterior. É essa sobra que deixa a beirada do card de trás
+       aparecendo e desenha a pilha — o degrau precisa ser maior que
+       os 3px da borda dourada do topo do card, senão os cards de trás
+       viram só um monte de listra laranja em vez de parecerem cards.
+     o espaço entre os cards (margin-top abaixo): é o intervalo de
+       rolagem entre um card travar e o próximo encostar nele — quanto
+       maior, mais devagar a pilha se forma. */
+  --pc-stack-top: clamp(97px,13vh,116px);
+  --pc-stack-step: clamp(13px,1.8vw,19px);
+  /* ATENÇÃO, esta caixa é `block` de propósito, NÃO use grid/flex aqui:
+     num container grid, o "quadro" que prende um item sticky é a célula
+     dele, e a célula tem exatamente a altura do card — ou seja, sobra
+     zero folga pro card correr, e ele se solta do topo antes da pilha
+     ficar pronta (dava pra ver os cards de trás escapando um por um
+     conforme o último encostava). Em layout de bloco, o quadro de todos
+     eles é esta caixa inteira, então cada card fica travado até a pilha
+     terminar. Por isso o espaçamento também é margin, e não gap. */
+  display: block;
+}
+/* Respiro DEPOIS do último card: enquanto sobrar altura aqui dentro, a
+   pilha inteira continua travada na tela. Sem isto o último card encosta
+   no topo e vai embora no mesmo instante, sem dar tempo de ler — é o
+   mesmo "HOLD" do modelo antigo, só que de graça.
+   TEM que ser este ::after (conteúdo de verdade) e NÃO um padding-bottom
+   na .pc-stack: o navegador limita o quanto um sticky pode descer pela
+   caixa de CONTEÚDO do pai, e padding fica fora dela. Com padding, os
+   dois últimos cards nunca chegavam a encostar no topo — paravam ~30px
+   antes e a pilha terminava torta, com os degraus finais grudados. */
+.pc-stack::after {
+  content: "";
+  display: block;
+  height: clamp(80px,22vh,200px);
+}
+.pc-stack-item + .pc-stack-item { margin-top: clamp(20px,4.5vh,52px); }
+.pc-stack-item {
+  position: sticky;
+  top: calc(var(--pc-stack-top) + var(--i) * var(--pc-stack-step));
+  /* Cada card precisa pintar por cima dos que já travaram atrás dele. */
+  z-index: calc(var(--i) + 1);
+}
+.pc-stack-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: clamp(18px,2.4vw,24px);
+  box-sizing: border-box;
+  /* Fundo opaco é obrigatório: é ele que faz um card esconder o outro.
+     Com fundo transparente os textos se sobrepõem e vira aquela sopa
+     ilegível. Branco puro aqui pede um fundo de seção levemente tingido
+     (ver os gradientes no HTML das duas seções) — card branco em cima de
+     seção branca some, e a pilha vira só um monte de linha dourada
+     solta, sem corpo de card nenhum aparecendo atrás. */
+  background: #fff;
+  /* Sombra um pouco mais presente que a do .pc-card padrão: aqui os
+     cards ficam encostados uns nos outros, e é ela que separa a beirada
+     de um do corpo do outro. */
+  box-shadow: 0 1px 2px rgba(27,48,79,.06), 0 14px 30px -18px rgba(27,48,79,.28);
+}
+/* Sem o "pulinho" de -8px no hover aqui: o card está travado na pilha,
+   levantar ele faz a beirada do card de trás piscar junto. Borda e
+   sombra continuam reagindo, então o card não fica morto. */
+.pc-stack-card:hover { transform: none; }
+.pc-stack-num {
+  flex: none;
+  font-family: 'PT Serif',Georgia,serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+}
+.pc-stack-card-title {
+  font-size: clamp(.98rem,1.5vw,1.06rem);
+  font-weight: 700;
+  color: #1B304F;
+  margin: 0 0 8px;
+  line-height: 1.35;
+  text-wrap: pretty;
+}
+.pc-stack-card-text {
+  font-size: clamp(.88rem,1.2vw,.93rem);
+  line-height: 1.65;
+  color: #222222;
+  margin: 0;
+  text-wrap: pretty;
+}
+.pc-stack-cta { margin: clamp(26px,4vw,38px) 0 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* Quem pediu menos movimento vê exatamente o mesmo conteúdo, só que
+     nada gruda: cards um embaixo do outro, todos legíveis de uma vez. */
+  .pc-stack-item, .pc-stack-aside { position: static; }
+  .pc-stack::after { display: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   "O cuidado, do trilho ao trilho" (#beneficios) — esta seção ainda usa
+   o modelo de PIN (a seção gruda na tela e a seguinte sobe por cima).
+   Aqui não tem stack de cards: dentro do pin fica parado o carrossel
+   "coverflow" (mesmo estilo e tamanho do Portfólio), e a pessoa navega
+   nele sem pressa; só quando ela rolar de propósito é que o Portfólio
+   (.pc-why-cover) sobe e cobre tudo.
+   height:300vh no HTML = 200vh de respiro pra navegar o carrossel +
+   100vh do pin em si. ═════════════════════════════════════════════ */
+.pc-why-outer { position: relative; height: 300vh; }
 .pc-why-inner {
   position: sticky;
   top: 0;
   left: 0;
   width: 100%;
   height: 100vh;
-  height: 100dvh; /* corrige o "pulo" da barra de endereço sumir/aparecer no mobile */
+  height: 100dvh; /* corrige o "pulo" da barra de endereço no mobile */
   display: flex;
   align-items: center;
   padding: clamp(96px,15vw,150px) clamp(20px,5vw,44px) clamp(20px,4vw,40px);
@@ -752,129 +892,31 @@ summary::-webkit-details-marker { display: none; }
   background: #fff;
   z-index: 1;
 }
-.pc-why-photo {
-  margin: 0 auto;
-  display: none;
-  width: min(100%, 380px);
-}
-.pc-card-stack {
-  position: relative;
-  height: clamp(220px,44vh,290px);
-  margin: clamp(16px,3vh,26px) 0;
-  /* Esconde de verdade quem ainda não chegou — sem isto, um card que só
-     está "um pouco" deslocado pra baixo continua aparecendo por cima
-     do card da vez (foi exatamente o que deu aquela sopa de texto
-     ilegível). Com o corte aqui, um card fora do lugar (translateY
-     100%, uma altura inteira abaixo) some de verdade, e só reaparece
-     deslizando por cima conforme a rolagem avança. */
-  overflow: hidden;
-  border-radius: 14px;
-}
-.pc-card-stack-item {
-  position: absolute;
-  inset: 0;
-  transform: translateY(0);
-  will-change: transform;
-}
-.pc-card-stack-item .pc-card { height: 100%; overflow: auto; }
-.pc-card-stack-item .pc-card:hover { transform: none; }
-.pc-card-stack-item[data-stack-i="0"] { z-index: 1; }
-.pc-card-stack-item[data-stack-i="1"] { z-index: 2; }
-.pc-card-stack-item[data-stack-i="2"] { z-index: 3; }
-.pc-card-stack-item[data-stack-i="3"] { z-index: 4; }
-.pc-card-stack-item[data-stack-i="4"] { z-index: 5; }
-.pc-why-progress {
-  /* Bolinhas de progresso removidas a pedido — o card já deixa claro
-     onde está (01/02/03/04 no badge), não precisa de indicador extra. */
-  display: none;
-}
-.pc-why-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--border);
-  transition: background .25s, width .25s;
-}
-.pc-why-dot.is-active { background: var(--gold); width: 22px; border-radius: 999px; }
-.pc-why-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin: 12px 0 0;
-  font-size: .85rem;
-  font-weight: 600;
-  color: var(--gold-text);
-  transition: opacity .6s var(--ease-lux), filter .6s var(--ease-lux);
-}
-.pc-why-hint svg { animation: stack-hint-bob 1.4s ease-in-out infinite; }
-.pc-why-hint.is-hidden { opacity: 0; filter: blur(4px); pointer-events: none; }
-.pc-why-cta { margin: clamp(14px,3vh,28px) 0 0; }
-
-/* Abaixo de 860px a foto não entra espremida dentro da caixa grudada —
-   ela já apareceu antes, numa seção normal e solta (.pc-mobile-photo,
-   ver mais abaixo e o HTML antes de cada seção com scroll stacking). A
-   partir de 860px é que cabe o grid de 2 colunas lado a lado (foto +
-   cards), e aí sim a .pc-why-photo entra em cena — a .pc-mobile-photo
-   correspondente some nesse ponto. */
 @media (min-width: 560px) {
   .pc-why-inner { padding-left: clamp(24px,5vw,44px); padding-right: clamp(24px,5vw,44px); }
-  .pc-card-stack { height: clamp(200px,34vh,260px); }
 }
-@media (min-width: 860px) {
-  .pc-why-photo { display: block; width: min(100%, 380px); }
-  .pc-card-stack { height: clamp(230px,30vh,290px); }
-}
-
-/* "O cuidado, do trilho ao trilho" (#beneficios) — reaproveita o mesmo
-   pin (.pc-why-outer/.pc-why-inner) das outras seções, mas sem stack de
-   cards: aqui dentro fica parado o carrossel "coverflow" (mesmo estilo
-   e mesmo tamanho do Portfólio — #included-stage usa o .pf-stage
-   padrão, sem overrides de altura, por isso não estoura mais a caixa).
-   height:300vh no HTML = 200vh de respiro pra navegar o carrossel (só
-   avança se a pessoa rolar de propósito) + 100vh do pin. No fim, a
-   seção seguinte (Portfólio, .pc-why-cover) sobe e cobre tudo. */
 .pc-included-inner {
   background: linear-gradient(180deg,#FBF6EB,#F7F6F3);
   border-top: 1px solid #E6E3DC;
   border-bottom: 1px solid #E6E3DC;
-  /* Título + carrossel + legenda aqui são mais altos que nas seções de
-     cards (ícone+título+parágrafo embaixo da foto), então essa caixa
-     usa um respiro de topo menor que o padrão — em telas de notebook
-     mais baixas (~800px de altura) o conjunto inteiro não cabia nos
-     100vh grudados e cortava o final do texto do card. */
+  /* Título + carrossel + legenda aqui são altos, então esta caixa usa um
+     respiro de topo menor que o padrão — em notebook baixo (~800px de
+     altura) o conjunto não cabia nos 100vh grudados e cortava o texto. */
   padding-top: clamp(64px,7vw,84px) !important;
   padding-bottom: clamp(16px,3vw,28px) !important;
 }
 /* Cards com ícone+título+parágrafo abaixo da foto são mais altos que os
    do Portfólio (que só têm uma legenda de uma linha) — por isso esta
    caixa é maior que o .pf-stage padrão. Medido de verdade com o
-   conteúdo real (não só calculado), pra não repetir o card estourando
-   a caixa. */
+   conteúdo real, pra não repetir o card estourando a caixa. */
 #included-stage { height: clamp(440px, 90vw, 480px); }
 @media (min-width: 900px) {
   #included-stage { height: clamp(500px, 36vw, 560px); }
 }
-@media (prefers-reduced-motion: reduce) {
-  /* O coverflow em si (arrastar/setas) continua funcionando sem o pin —
-     só a seção para de "grudar" na tela. */
-  #beneficios.pc-why-outer { height: auto !important; }
-}
 
-/* Seção solta só com a foto, exibida antes de cada seção com scroll
-   stacking (#pc-why-outer, #steps-outer) — no mobile é aqui que a
-   imagem aparece; a partir de 860px ela some porque a mesma foto já
-   está dentro do grid de 2 colunas da seção seguinte. */
-.pc-mobile-photo { padding: clamp(48px,8vw,72px) clamp(24px,5vw,44px) 0; }
-@media (min-width: 860px) {
-  .pc-mobile-photo { display: none; }
-}
-
-/* A seção seguinte "sobe" e cobre esta por inteiro: puxada 100vh pra
-   cima (a mesma altura da caixa grudada acima) e com z-index maior +
-   fundo opaco, ela desliza por cima só depois do HOLD (ver
-   .pc-why-outer acima) — dando tempo de ler o card 04 antes de
-   qualquer coisa começar a subir. */
+/* A seção seguinte "sobe" e cobre a pinada por inteiro: puxada 100vh pra
+   cima (a mesma altura da caixa grudada) e com z-index maior + fundo
+   opaco. Hoje só o Portfólio usa isto, pra cobrir o #beneficios. */
 .pc-why-cover {
   position: relative;
   z-index: 2;
@@ -882,20 +924,10 @@ summary::-webkit-details-marker { display: none; }
   background: #F7F6F3;
 }
 @media (prefers-reduced-motion: reduce) {
-  /* Sem JS animando (ele nem liga o listener nesse caso), os 4 cards
-     viram uma lista normal, todos legíveis de uma vez — em vez de
-     ficarem empilhados parados um em cima do outro, o que esconderia
-     01/02/03 pra sempre atrás do 04. */
+  /* O coverflow (arrastar/setas) continua funcionando sem o pin — só a
+     seção para de grudar, e a de baixo para de subir por cima. */
   .pc-why-outer { height: auto !important; }
   .pc-why-inner { position: static; height: auto; overflow: visible; padding-top: clamp(24px,5vw,44px); }
-  .pc-card-stack { position: static; height: auto; overflow: visible; }
-  .pc-card-stack-item {
-    position: static;
-    transform: none !important;
-    transition: none !important;
-  }
-  .pc-card-stack-item + .pc-card-stack-item { margin-top: 14px; }
-  .pc-why-hint { display: none; }
   .pc-why-cover { margin-top: 0; }
 }
 
