@@ -21,10 +21,11 @@ diferentes:
      seção seguinte sobe e cobre a seção inteira). A seção gruda na tela
      por uma rolagem maior que ela mesma, e um JS converte o scroll em
      progresso pra mover os cards. Só um card aparece de cada vez.
-     → Hoje sobrou só o "pin" desta mecânica, sem o stack de cards, na
-       seção "O cuidado, do trilho ao trilho" (#beneficios), coberta
-       pelo Portfólio.
-     → Documentado mais abaixo, em "MECÂNICA B".
+     → NÃO está mais em uso na LP da Prime. O último lugar que usava
+       (só o "pin", sem stack de cards) era "O cuidado, do trilho ao
+       trilho" (#beneficios), coberta pelo Portfólio — removido a
+       pedido; hoje as duas são seções normais, em fluxo.
+     → Documentado mais abaixo, em "MECÂNICA B", para reuso.
 
 QUAL ESCOLHER:
   - Quer que a pessoa veja os itens se acumulando, e possa comparar o
@@ -166,10 +167,12 @@ mais pega gente de surpresa).
 
 ════════════════════════════════════════════════════════════════════════
 MECÂNICA B — PIN + COBRIR (um card substitui o outro) · precisa de JS
-Na LP da Prime hoje só o "pin" desta mecânica segue em uso, sem o stack
-de cards, na seção "O cuidado, do trilho ao trilho" (#beneficios) — ver
-a variante no fim do arquivo. O stack de cards em si foi substituído
-pela MECÂNICA A nas duas seções que o usavam.
+FORA DE USO na LP da Prime — está aqui só como referência para reuso.
+O stack de cards foi substituído pela MECÂNICA A nas duas seções que o
+usavam, e o "pin" sozinho (em "O cuidado, do trilho ao trilho") foi
+removido depois, a pedido. Ou seja: as classes .pc-why-outer,
+.pc-why-inner e .pc-why-cover NÃO existem mais no css/site.css — se for
+reaproveitar esta mecânica, cole o CSS dos blocos abaixo de volta.
 ════════════════════════════════════════════════════════════════════════
 
 O QUE É

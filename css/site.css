@@ -868,43 +868,27 @@ summary::-webkit-details-marker { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   "O cuidado, do trilho ao trilho" (#beneficios) — esta seção ainda usa
-   o modelo de PIN (a seção gruda na tela e a seguinte sobe por cima).
-   Aqui não tem stack de cards: dentro do pin fica parado o carrossel
-   "coverflow" (mesmo estilo e tamanho do Portfólio), e a pessoa navega
-   nele sem pressa; só quando ela rolar de propósito é que o Portfólio
-   (.pc-why-cover) sobe e cobre tudo.
-   height:300vh no HTML = 200vh de respiro pra navegar o carrossel +
-   100vh do pin em si. ═════════════════════════════════════════════ */
-.pc-why-outer { position: relative; height: 300vh; }
-.pc-why-inner {
-  position: sticky;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  height: 100dvh; /* corrige o "pulo" da barra de endereço no mobile */
-  display: flex;
-  align-items: center;
-  padding: clamp(96px,15vw,150px) clamp(20px,5vw,44px) clamp(20px,4vw,40px);
-  box-sizing: border-box;
-  overflow: hidden;
-  background: #fff;
-  z-index: 1;
-}
-@media (min-width: 560px) {
-  .pc-why-inner { padding-left: clamp(24px,5vw,44px); padding-right: clamp(24px,5vw,44px); }
-}
-.pc-included-inner {
+   "O cuidado, do trilho ao trilho" (#beneficios) — seção normal, em
+   fluxo, como qualquer outra da página. Dentro dela fica o carrossel
+   "coverflow" (mesmo estilo e tamanho do Portfólio), navegado por
+   arraste ou pelas setas, no tempo de quem está lendo.
+   Esta seção já teve o efeito de "pin" (ela grudava na tela por 300vh e
+   o Portfólio subia por cima cobrindo tudo) — foi removido a pedido.
+   Com ele saíram as classes .pc-why-outer/.pc-why-inner/.pc-why-cover,
+   que não são mais usadas em lugar nenhum. A mecânica continua
+   documentada em scroll-stacking-cards.txt (MECÂNICA B), caso um dia
+   se queira de volta aqui ou em outra seção. ═══════════════════════ */
+.pc-included-sec {
   background: linear-gradient(180deg,#FBF6EB,#F7F6F3);
   border-top: 1px solid #E6E3DC;
   border-bottom: 1px solid #E6E3DC;
-  /* Título + carrossel + legenda aqui são altos, então esta caixa usa um
-     respiro de topo menor que o padrão — em notebook baixo (~800px de
-     altura) o conjunto não cabia nos 100vh grudados e cortava o texto. */
-  padding-top: clamp(64px,7vw,84px) !important;
-  padding-bottom: clamp(16px,3vw,28px) !important;
+  padding: clamp(56px,8vw,88px) clamp(20px,5vw,44px) clamp(48px,6vw,72px);
 }
+@media (min-width: 560px) {
+  .pc-included-sec { padding-left: clamp(24px,5vw,44px); padding-right: clamp(24px,5vw,44px); }
+}
+.pc-included-inner { width: 100%; }
+
 /* Cards com ícone+título+parágrafo abaixo da foto são mais altos que os
    do Portfólio (que só têm uma legenda de uma linha) — por isso esta
    caixa é maior que o .pf-stage padrão. Medido de verdade com o
@@ -912,23 +896,6 @@ summary::-webkit-details-marker { display: none; }
 #included-stage { height: clamp(440px, 90vw, 480px); }
 @media (min-width: 900px) {
   #included-stage { height: clamp(500px, 36vw, 560px); }
-}
-
-/* A seção seguinte "sobe" e cobre a pinada por inteiro: puxada 100vh pra
-   cima (a mesma altura da caixa grudada) e com z-index maior + fundo
-   opaco. Hoje só o Portfólio usa isto, pra cobrir o #beneficios. */
-.pc-why-cover {
-  position: relative;
-  z-index: 2;
-  margin-top: -100vh;
-  background: #F7F6F3;
-}
-@media (prefers-reduced-motion: reduce) {
-  /* O coverflow (arrastar/setas) continua funcionando sem o pin — só a
-     seção para de grudar, e a de baixo para de subir por cima. */
-  .pc-why-outer { height: auto !important; }
-  .pc-why-inner { position: static; height: auto; overflow: visible; padding-top: clamp(24px,5vw,44px); }
-  .pc-why-cover { margin-top: 0; }
 }
 
 
