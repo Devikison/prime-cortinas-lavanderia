@@ -1,7 +1,175 @@
 ════════════════════════════════════════════════════════════════════════
-MECÂNICA: "SCROLL STACKING" (cards empilhando + seção cobrindo a seguinte)
+DUAS MECÂNICAS DE "SCROLL STACKING" — qual usar em cada caso
 Feito e testado na LP da Prime Cortinas — reutilizável em qualquer landing
-page estática (HTML + CSS + JS puro, sem lib nenhuma).
+page estática (HTML + CSS puro; a mecânica B ainda usa um JS mínimo).
+════════════════════════════════════════════════════════════════════════
+
+LEIA ISTO PRIMEIRO
+-------------------
+Existem duas coisas diferentes neste arquivo, e elas resolvem problemas
+diferentes:
+
+  A) PILHA (os cards vão SE JUNTANDO) — cada card sobe, trava no topo e
+     o próximo para logo ABAIXO dele, deixando a beirada do anterior à
+     mostra. No fim você vê a pilha inteira montada. É CSS puro, sem JS
+     nenhum, e a seção continua no fluxo normal da página.
+     → Hoje é o que está nas seções "Por que quase ninguém lava a
+       cortina?" (#pc-why-outer) e "Cinco passos..." (#steps-outer).
+     → Documentado logo abaixo, em "MECÂNICA A".
+
+  B) PIN + COBRIR (um card SUBSTITUI o outro por completo, e no fim a
+     seção seguinte sobe e cobre a seção inteira). A seção gruda na tela
+     por uma rolagem maior que ela mesma, e um JS converte o scroll em
+     progresso pra mover os cards. Só um card aparece de cada vez.
+     → Hoje sobrou só o "pin" desta mecânica, sem o stack de cards, na
+       seção "O cuidado, do trilho ao trilho" (#beneficios), coberta
+       pelo Portfólio.
+     → Documentado mais abaixo, em "MECÂNICA B".
+
+QUAL ESCOLHER:
+  - Quer que a pessoa veja os itens se acumulando, e possa comparar o
+    card da vez com os que já passaram? → A.
+  - Os cards têm alturas bem diferentes, ou o texto muda com frequência?
+    → A (não tem altura fixa pra recalcular; cada card cresce sozinho).
+  - Quer uma seção que gruda pra pessoa navegar um carrossel com calma, e
+    só depois a próxima seção sobe por cima? → B (sem o stack de cards).
+  - Quer "um card apaga o outro", sem pilha à vista? → B com stack.
+
+POR QUE A LP MIGROU DE B PARA A NOS CARDS: em B a altura da seção é um
+`height:XXXvh` calculado na mão (lead + reveal + hold + pin) que precisa
+ser refeito toda vez que um texto muda ou entra/sai um card, e os cards
+ficam numa caixa de altura fixa com overflow — o que já cortou texto em
+notebook baixo mais de uma vez. Em A nada disso existe: é fluxo normal.
+
+
+════════════════════════════════════════════════════════════════════════
+MECÂNICA A — PILHA (os cards vão se juntando) · CSS puro, sem JS
+════════════════════════════════════════════════════════════════════════
+
+A IDEIA
+--------
+Cada card é `position: sticky` com um `top` um pouquinho MAIOR que o do
+card anterior. Conforme a página rola, o card da vez sobe, encosta no
+topo e trava ali; o próximo continua subindo e para logo abaixo dele. O
+resultado é uma pilha, com a beirada de cada card ainda aparecendo por
+baixo do seguinte. Rolando pra trás a pilha se desfaz sozinha, na ordem
+inversa — não tem estado nenhum pra reverter, é o navegador fazendo.
+
+1) HTML
+------------------------------------------------------------------------
+<section class="pc-stack-sec" style="background:linear-gradient(180deg,#FFF,#ECF0F6)">
+  <div class="pc-stack-grid">
+    <!-- coluna que fica parada (foto, opcional). O [data-reveal], que
+         anima com transform, vai na div de DENTRO — nunca no elemento
+         sticky nem em ancestral dele. -->
+    <div class="pc-stack-aside">
+      <div data-reveal><img src="..." alt="..."></div>
+    </div>
+    <div class="pc-stack-main">
+      <div data-reveal class="pc-stack-head"><h2>Título</h2><p>Apoio.</p></div>
+      <div class="pc-stack">
+        <article class="pc-stack-item" style="--i:0"><div class="pc-card">…</div></article>
+        <article class="pc-stack-item" style="--i:1"><div class="pc-card">…</div></article>
+        <article class="pc-stack-item" style="--i:2"><div class="pc-card">…</div></article>
+        <!-- --i segue 3, 4, 5... quantos cards quiser -->
+      </div>
+      <div data-reveal class="pc-stack-cta"><a class="btn-primary" href="#">Ação</a></div>
+    </div>
+  </div>
+</section>
+
+Não tem altura em vh pra calcular, não tem data-* de progresso, e a
+seção seguinte é uma seção normal (nada de margin-top negativo).
+
+2) CSS (o essencial — a versão completa está em css/site.css)
+------------------------------------------------------------------------
+.pc-stack {
+  --pc-stack-top: clamp(97px,13vh,116px);   /* onde o 1º card trava */
+  --pc-stack-step: clamp(13px,1.8vw,19px);  /* degrau entre um e outro */
+  display: block;                            /* NÃO use grid/flex aqui */
+}
+.pc-stack-item + .pc-stack-item { margin-top: clamp(20px,4.5vh,52px); }
+.pc-stack-item {
+  position: sticky;
+  top: calc(var(--pc-stack-top) + var(--i) * var(--pc-stack-step));
+  z-index: calc(var(--i) + 1);
+}
+.pc-stack-item > .pc-card { background: #fff; }  /* opaco, obrigatório */
+
+/* respiro depois do último card — ver PEGADINHA A1 */
+.pc-stack::after { content:""; display:block; height: clamp(80px,22vh,200px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-stack-item, .pc-stack-aside { position: static; }
+  .pc-stack::after { display: none; }
+}
+
+3) JS
+------------------------------------------------------------------------
+Nenhum. É isso mesmo.
+
+
+PEGADINHAS DA MECÂNICA A (todas custaram tempo aqui)
+------------------------------------------------------------------------
+A1) A pilha termina TORTA: os últimos cards param uns 30px antes de
+    encostar no topo e os degraus finais ficam grudados.
+    → O respiro depois do último card estava como `padding-bottom` na
+      .pc-stack. Não funciona: o navegador limita o quanto um sticky pode
+      descer pela caixa de CONTEÚDO do pai, e padding fica FORA dela.
+      Use um `::after` com height (conteúdo de verdade), como acima.
+      Sintoma de laboratório: no ponto em que o último card deveria
+      travar, só 1 a 3 dos 5 cards estão de fato travados.
+
+A2) A .pc-stack NÃO pode ser `display:grid` nem `flex`. Em grid/flex, o
+    "quadro" que prende um item sticky é a célula dele, que tem a altura
+    exata do card — sobra zero folga pra ele correr. Por isso o
+    espaçamento entre cards é `margin-top`, e não `gap`.
+
+A3) A pilha vira um monte de linha colorida solta, sem corpo de card
+    atrás: o card é branco E o fundo da seção é branco, então só a borda
+    de cima aparece. → Dê um tom levemente puxado ao fundo da seção
+    (aqui: gradiente terminando em #ECF0F6).
+
+A4) As beiradas dos cards de trás somem debaixo do cabeçalho: não basta
+    o --pc-stack-top passar da altura do header se ele for TRANSLÚCIDO
+    (backdrop-filter) — o que passa por baixo fica borrado. Deixe uns
+    20-25px de folga limpa (header de 73px → mínimo de 97px).
+
+A5) O sticky simplesmente não gruda: procure um `transform` no elemento
+    ou em algum ancestral (um [data-reveal] envolvendo tudo, por
+    exemplo). Transform em ancestral mata sticky sem erro no console.
+    Ver também a PEGADINHA 1 da mecânica B (overflow no body), que vale
+    igual aqui.
+
+A6) O degrau (--pc-stack-step) precisa ser maior que a borda colorida do
+    topo do card (aqui são 3px), senão os cards de trás parecem listras
+    em vez de cards.
+
+
+COMO CONFERIR SEM CHUTAR
+------------------------------------------------------------------------
+Rolando até o ponto em que o ÚLTIMO card trava, TODOS os cards devem
+estar travados ao mesmo tempo. Cole no console:
+
+  var itens = [...document.querySelectorAll('#MEU-STACK .pc-stack-item')];
+  itens.map(function (i, n) {
+    var r = i.getBoundingClientRect(), t = parseFloat(getComputedStyle(i).top);
+    return { card: n, topo: Math.round(r.top), deveriaSer: t,
+             travado: Math.abs(r.top - t) < 1.5,
+             cabeNaTela: r.bottom <= window.innerHeight };
+  });
+
+Se algum `travado` vier false no fim da rolagem → PEGADINHA A1.
+Teste em pelo menos 375x667, 768x1024 e 1440x800 (notebook baixo é o que
+mais pega gente de surpresa).
+
+
+════════════════════════════════════════════════════════════════════════
+MECÂNICA B — PIN + COBRIR (um card substitui o outro) · precisa de JS
+Na LP da Prime hoje só o "pin" desta mecânica segue em uso, sem o stack
+de cards, na seção "O cuidado, do trilho ao trilho" (#beneficios) — ver
+a variante no fim do arquivo. O stack de cards em si foi substituído
+pela MECÂNICA A nas duas seções que o usavam.
 ════════════════════════════════════════════════════════════════════════
 
 O QUE É
