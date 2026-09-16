@@ -188,6 +188,91 @@
     // próprio #included-stage.
     initCoverflow('included-stage', 'pf-slide', 'included-prev', 'included-next');
 
+    // ---- Vídeo do quadro em "Cinco passos..." — toca sozinho e sem som,
+    // como uma foto que se move, e só enquanto está na tela (não gasta
+    // dados nem bateria rodando fora de vista). Os dois botões no canto
+    // devolvem o controle: pausar e ligar o áudio. Uma pausa feita pela
+    // pessoa é definitiva: o scroll não volta a tocar por cima dela. ----
+    function initFrameVideo(videoId) {
+      var video = document.getElementById(videoId);
+      if (!video) return;
+      var btnPlay = document.querySelector('[data-video-play]');
+      var btnSound = document.querySelector('[data-video-sound]');
+      // Quem pediu menos movimento no sistema não recebe autoplay: o
+      // vídeo fica no poster, esperando o play.
+      var semMovimento = window.matchMedia
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var pausadoPelaPessoa = !!semMovimento;
+      var naTela = false;
+
+      function marcarPlay() {
+        if (!btnPlay) return;
+        var tocando = !video.paused;
+        btnPlay.setAttribute('data-state', tocando ? 'playing' : 'paused');
+        btnPlay.setAttribute('aria-label', tocando ? 'Pausar o vídeo' : 'Tocar o vídeo');
+      }
+      function marcarSom() {
+        if (!btnSound) return;
+        btnSound.setAttribute('data-state', video.muted ? 'muted' : 'on');
+        btnSound.setAttribute('aria-label', video.muted ? 'Ativar o som do vídeo' : 'Desativar o som do vídeo');
+      }
+      // play() devolve promise e pode ser recusado (autoplay bloqueado,
+      // economia de dados). Nesse caso fica o poster e o botão de play.
+      function tocar() {
+        var p = video.play();
+        if (p && p.catch) p.catch(function () { marcarPlay(); });
+      }
+
+      video.addEventListener('play', marcarPlay);
+      video.addEventListener('pause', marcarPlay);
+      video.addEventListener('volumechange', marcarSom);
+
+      if (btnPlay) {
+        btnPlay.addEventListener('click', function () {
+          if (video.paused) {
+            pausadoPelaPessoa = false;
+            tocar();
+          } else {
+            pausadoPelaPessoa = true;
+            video.pause();
+          }
+        });
+      }
+      if (btnSound) {
+        btnSound.addEventListener('click', function () {
+          video.muted = !video.muted;
+          // Ligar o som num vídeo parado não faz sentido: o clique já é
+          // o gesto que o navegador exige, então aproveita e toca.
+          if (!video.muted && video.paused) {
+            pausadoPelaPessoa = false;
+            tocar();
+          }
+          marcarSom();
+        });
+      }
+
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            naTela = entry.isIntersecting;
+            if (naTela) {
+              if (!pausadoPelaPessoa) tocar();
+            } else if (!video.paused) {
+              // Sai de vista: pausa sem marcar como pausa da pessoa, pra
+              // voltar a tocar quando ela rolar de volta.
+              video.pause();
+            }
+          });
+        }, { threshold: 0.35 }).observe(video);
+      } else if (!pausadoPelaPessoa) {
+        tocar();
+      }
+
+      marcarPlay();
+      marcarSom();
+    }
+    initFrameVideo('steps-video');
+
     // ---- Faixa de depoimentos: auto-scroll contínuo (nunca pausa no
     // hover) que pode ser arrastado livremente com o mouse ou o dedo. O
     // arraste só desloca a posição; o auto-scroll retoma sozinho a seguir. ----

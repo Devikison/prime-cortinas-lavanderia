@@ -364,6 +364,55 @@ summary::-webkit-details-marker { display: none; }
   box-shadow: 0 40px 80px -32px rgba(27,48,79,.32);
 }
 
+/* ── Vídeo dentro do quadro ("Cinco passos...") ────────────────────────
+   Toca sozinho e sem som, como uma foto que se move. Os dois botões no
+   canto de baixo devolvem o controle: pausar e ligar o áudio. Ficam
+   pequenos e translúcidos pra não competir com a cena, e escurecem no
+   hover. Quem pausa fica pausado — o JS não volta a tocar sozinho. */
+.pc-video-ctl {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  z-index: 2;
+  display: flex;
+  gap: 8px;
+}
+.pc-video-btn {
+  width: 38px;
+  height: 38px;
+  flex: none;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,.5);
+  border-radius: 999px;
+  background: rgba(20,37,64,.58);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 20px -8px rgba(15,28,48,.6);
+  transition: background .3s var(--ease-lux), border-color .3s var(--ease-lux), transform .3s var(--ease-lux);
+}
+.pc-video-btn:hover {
+  background: rgba(20,37,64,.85);
+  border-color: var(--gold);
+  transform: scale(1.08);
+}
+.pc-video-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.pc-video-btn svg { display: block; }
+/* Cada botão carrega os dois ícones; o data-state decide qual aparece. */
+.pc-video-btn [data-icon] { display: none; }
+.pc-video-btn[data-state="playing"] [data-icon="pause"],
+.pc-video-btn[data-state="paused"] [data-icon="play"],
+.pc-video-btn[data-state="muted"] [data-icon="muted"],
+.pc-video-btn[data-state="on"] [data-icon="sound"] { display: block; }
+/* No celular o alvo de toque precisa ser maior que o ícone. */
+@media (max-width: 700px) {
+  .pc-video-btn { width: 42px; height: 42px; }
+}
+
 /* Botões e links com hover — motion lento e com elevação, com um leve
    relevo 3D (brilho no topo + sombra interna na base) que dá o toque
    luxuoso sem alterar as cores de fundo definidas inline. */
