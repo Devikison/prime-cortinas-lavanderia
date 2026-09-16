@@ -600,6 +600,10 @@ summary::-webkit-details-marker { display: none; }
 }
 .img-placeholder svg { opacity: .45; flex: none; }
 .img-placeholder span { font-size: 13px; line-height: 1.4; max-width: 88%; }
+/* Placeholder que já recebeu a foto: sem moldura tracejada nem fundo, senão
+   a borda fica desenhada em volta da imagem. Se a <img> falhar, o onerror a
+   remove, o :has() deixa de casar e o placeholder tracejado volta sozinho. */
+.img-placeholder:has(img) { border: 0; background: none; }
 
 /* Revelação suave ao rolar (aplicada via JS a [data-reveal]) */
 [data-reveal] {
