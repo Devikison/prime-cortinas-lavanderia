@@ -24,7 +24,9 @@ diferentes:
      → NÃO está mais em uso na LP da Prime. O último lugar que usava
        (só o "pin", sem stack de cards) era "O cuidado, do trilho ao
        trilho" (#beneficios), coberta pelo Portfólio — removido a
-       pedido; hoje as duas são seções normais, em fluxo.
+       pedido; hoje ela é uma seção normal, em fluxo, e a seção de
+       Portfólio não existe mais (as fotos e as explicações ficam nos
+       cards dela).
      → Documentado mais abaixo, em "MECÂNICA B", para reuso.
 
 QUAL ESCOLHER:

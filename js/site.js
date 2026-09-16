@@ -128,9 +128,9 @@
       }
     }
 
-    // ---- Carrossel "coverflow" do Portfólio — card central em foco,
-    // vizinhos desfocados nas laterais, transição lenta via setas ou
-    // arraste (mouse ou dedo). ----
+    // ---- Carrossel "coverflow" — card central em foco, vizinhos
+    // desfocados nas laterais, transição lenta via setas ou arraste
+    // (mouse ou dedo). ----
     function initCoverflow(stageId, slideClass, prevId, nextId) {
       var stage = document.getElementById(stageId);
       if (!stage) return;
@@ -182,11 +182,10 @@
 
       render();
     }
-    initCoverflow('pf-stage', 'pf-slide', 'pf-prev', 'pf-next');
-    // "O cuidado, do trilho ao trilho" — mesmo carrossel "coverflow" do
-    // Portfólio (reaproveita initCoverflow; a classe .pf-slide é sempre
-    // buscada só dentro do próprio #included-stage, então não colide
-    // com os slides do Portfólio).
+    // "Um retrato do nosso cuidado, do trilho ao trilho" — único
+    // carrossel "coverflow" da página (a antiga seção de Portfólio foi
+    // absorvida por ela). A classe .pf-slide é buscada só dentro do
+    // próprio #included-stage.
     initCoverflow('included-stage', 'pf-slide', 'included-prev', 'included-next');
 
     // ---- Faixa de depoimentos: auto-scroll contínuo (nunca pausa no

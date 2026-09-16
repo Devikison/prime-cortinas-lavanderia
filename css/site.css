@@ -868,10 +868,12 @@ summary::-webkit-details-marker { display: none; }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   "O cuidado, do trilho ao trilho" (#beneficios) — seção normal, em
-   fluxo, como qualquer outra da página. Dentro dela fica o carrossel
-   "coverflow" (mesmo estilo e tamanho do Portfólio), navegado por
-   arraste ou pelas setas, no tempo de quem está lendo.
+   "Um retrato do nosso cuidado, do trilho ao trilho" (#beneficios) —
+   seção normal, em fluxo, como qualquer outra da página. Dentro dela
+   fica o carrossel "coverflow", navegado por arraste ou pelas setas, no
+   tempo de quem está lendo. Ela faz as duas coisas de uma vez: mostra a
+   foto de cada etapa (o antigo Portfólio, removido a pedido) e explica,
+   no próprio card, o que aquela etapa faz pela cortina.
    Esta seção já teve o efeito de "pin" (ela grudava na tela por 300vh e
    o Portfólio subia por cima cobrindo tudo) — foi removido a pedido.
    Com ele saíram as classes .pc-why-outer/.pc-why-inner/.pc-why-cover,
@@ -889,10 +891,10 @@ summary::-webkit-details-marker { display: none; }
 }
 .pc-included-inner { width: 100%; }
 
-/* Cards com ícone+título+parágrafo abaixo da foto são mais altos que os
-   do Portfólio (que só têm uma legenda de uma linha) — por isso esta
-   caixa é maior que o .pf-stage padrão. Medido de verdade com o
-   conteúdo real, pra não repetir o card estourando a caixa. */
+/* Cards com ícone+título+parágrafo abaixo da foto são mais altos que um
+   card só de imagem — por isso esta caixa é maior que o .pf-stage
+   padrão. Medido de verdade com o conteúdo real, pra não repetir o card
+   estourando a caixa. */
 #included-stage { height: clamp(440px, 90vw, 480px); }
 @media (min-width: 900px) {
   #included-stage { height: clamp(500px, 36vw, 560px); }
@@ -998,8 +1000,8 @@ summary::-webkit-details-marker { display: none; }
   .stats-track { animation: none; }
 }
 
-/* ── Portfólio: carrossel "coverflow" — card central em foco, vizinhos
-   desfocados nas laterais, transição lenta e luxuosa ────────────────── */
+/* ── Carrossel "coverflow" — card central em foco, vizinhos desfocados
+   nas laterais, transição lenta e luxuosa ───────────────────────────── */
 .pf-wrap { position: relative; touch-action: pan-y; }
 .pf-stage {
   position: relative;
@@ -1041,22 +1043,6 @@ summary::-webkit-details-marker { display: none; }
   .pf-slide { width: min(38vw, 520px); }
 }
 .pf-slide-card { overflow: hidden; }
-.pf-slide-caption { font-size: .96rem; font-weight: 700; color: var(--navy); margin: 0; padding: 16px 18px; }
-.pf-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 2;
-  background: var(--gold);
-  color: #fff;
-  font-size: .66rem;
-  font-weight: 700;
-  letter-spacing: .07em;
-  text-transform: uppercase;
-  padding: 6px 12px;
-  border-radius: 20px;
-  box-shadow: 0 6px 14px -4px rgba(27,48,79,.35);
-}
 /* Setas: no mobile ficam numa fileira abaixo da foto (não sobrepõem a
    imagem); a partir de 641px sobem para os cantos do carrossel, como no
    desktop original. */
