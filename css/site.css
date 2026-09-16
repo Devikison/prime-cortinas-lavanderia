@@ -809,6 +809,16 @@ summary::-webkit-details-marker { display: none; }
     gap: clamp(40px,6vw,72px);
   }
 }
+/* Espelho da seção "Cinco passos": os cards ocupam a coluna da esquerda,
+   onde a leitura começa, e o vídeo vai para a direita. É feito com
+   grid-column, não mexendo na ordem do HTML — assim, quando o grid
+   colapsa numa coluna só (abaixo de 860px), o vídeo continua entrando
+   primeiro, em cima dos cards, como sempre foi no celular. */
+@media (min-width: 860px) {
+  .pc-stack-grid-flip { grid-template-columns: minmax(360px,1.5fr) minmax(260px,1fr); }
+  .pc-stack-grid-flip > .pc-stack-main { grid-column: 1; grid-row: 1; }
+  .pc-stack-grid-flip > .pc-stack-aside { grid-column: 2; grid-row: 1; }
+}
 .pc-stack-aside { width: min(100%, 380px); margin: 0 auto; }
 @media (min-width: 860px) {
   /* A foto fica parada enquanto os cards se juntam do lado dela.
@@ -1070,6 +1080,13 @@ summary::-webkit-details-marker { display: none; }
   overflow: hidden;
 }
 .pf-stage:active { cursor: grabbing; }
+/* Sem isto o arraste morre no primeiro milímetro: ao apertar em cima
+   da foto do card, o navegador entende que a pessoa quer arrastar a
+   IMAGEM (o drag-and-drop nativo), dispara pointercancel e o gesto
+   nunca chega no carrossel. O user-select evita de quebra que o texto
+   do card saia grifado durante o arraste. */
+.pf-stage { user-select: none; -webkit-user-select: none; }
+.pf-stage img { -webkit-user-drag: none; user-drag: none; }
 .pf-slides {
   position: relative;
   width: 100%;
@@ -1087,7 +1104,12 @@ summary::-webkit-details-marker { display: none; }
   transform: translate(calc(-50% + var(--delta) * 62%), -50%) scale(var(--scale));
   opacity: var(--op);
   filter: blur(var(--blur));
-  transition: transform 1.05s var(--ease-lux), opacity 1.05s var(--ease-lux), filter 1.05s var(--ease-lux);
+  /* Sem transition de propósito: quem anima agora é o JS, quadro a
+     quadro (ver initLoopCarousel no site.js). Com transition, cada
+     valor novo abriria uma animação de 1s que o quadro seguinte
+     interromperia, e o card viveria atrasado em relação ao dedo —
+     aquele arraste borrachudo. */
+  will-change: transform, opacity;
 }
 @media (min-width: 900px) {
   /* Cards maiores no desktop, como pedido — a foto real deve ter pelo
@@ -1141,9 +1163,10 @@ summary::-webkit-details-marker { display: none; }
 @media (max-width: 640px) {
   .pf-stage-arrow { width: 44px; height: 44px; }
 }
-@media (prefers-reduced-motion: reduce) {
-  .pf-slide { transition: none; }
-}
+/* "Reduzir movimento" ligado no sistema: o giro automático não parte
+   (tratado no JS). Arrastar e as setas seguem funcionando, porque aí
+   o movimento responde a um gesto da pessoa, em vez de acontecer por
+   conta própria. */
 
 /* Botão circular reutilizado pelos controles de depoimentos */
 .pf-arrow {
@@ -1530,4 +1553,64 @@ summary::-webkit-details-marker { display: none; }
 .lead-select option { background: #1B304F; color: #fff; }
 @media (max-width: 560px) {
   .lead-form-row { grid-template-columns: 1fr !important; }
+}
+
+/* ── Rodapé ──────────────────────────────────────────────────────────
+   Dois andares: o bloco de fechamento (logo pequena, chamada e botão),
+   centralizado porque é o último empurrão para a conversa no WhatsApp, e
+   embaixo a faixa de informação em três colunas — atendimento, endereço
+   e institucional. No celular as colunas viram uma pilha centralizada,
+   acompanhando o resto do site. ──────────────────────────────────── */
+.ft { background: var(--navy-deep); color: #fff; padding: clamp(56px,7vw,92px) clamp(24px,5vw,44px) clamp(24px,3vw,32px); }
+.ft-inner { max-width: 1080px; margin: 0 auto; }
+
+.ft-cta { max-width: 640px; margin: 0 auto; text-align: center; }
+/* Logo pequena de propósito: ela assina o rodapé, não é o assunto dele.
+   A marca já apareceu no cabeçalho e ao longo da página inteira. */
+.ft-logo { height: clamp(44px,6.5vw,58px); width: auto; display: block; margin: 0 auto clamp(22px,3vw,30px); filter: brightness(0) invert(1); opacity: .95; }
+.ft-title { font-family: 'PT Serif', Georgia, serif; font-weight: 600; font-size: clamp(1.75rem,3.4vw,2.5rem); line-height: 1.2; letter-spacing: -.01em; color: #fff; margin: 0 0 14px; text-wrap: balance; }
+.ft-sub { font-size: clamp(.95rem,1.1vw,1.04rem); line-height: 1.7; color: rgba(255,255,255,.7); margin: 0 0 clamp(26px,3.2vw,34px); text-wrap: pretty; }
+
+.ft-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(30px,4vw,44px);
+  margin: clamp(48px,6vw,72px) 0 0;
+  padding: clamp(34px,4vw,46px) 0 0;
+  border-top: 1px solid rgba(255,255,255,.12);
+  text-align: center;
+  justify-items: center;
+}
+@media (min-width: 720px) {
+  /* Três colunas alinhadas à esquerda: é assim que se lê uma ficha de
+     contato. O centralizado só vale enquanto é uma pilha no celular. */
+  .ft-grid { grid-template-columns: repeat(3, 1fr); gap: clamp(28px,4vw,56px); text-align: left; justify-items: start; }
+}
+.ft-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+@media (min-width: 720px) { .ft-col { align-items: flex-start; } }
+.ft-col-title { font-size: .7rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin: 0 0 4px; }
+.ft-text { font-size: .9rem; line-height: 1.75; color: rgba(255,255,255,.64); margin: 0; }
+.ft-link { font-size: .9rem; line-height: 1.75; color: rgba(255,255,255,.78); text-decoration: none; transition: color var(--dur-med) var(--ease-lux); }
+.ft-link:hover { color: var(--gold); }
+.ft-phone { font-size: 1.02rem; font-weight: 600; color: #fff; }
+.ft-social { display: flex; align-items: center; gap: 12px; }
+
+.ft-bar {
+  margin: clamp(32px,4vw,44px) 0 0;
+  padding: clamp(18px,2.2vw,24px) 0 0;
+  border-top: 1px solid rgba(255,255,255,.1);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 10px;
+  text-align: center;
+}
+.ft-bar p { font-size: .8rem; line-height: 1.6; color: rgba(255,255,255,.45); margin: 0; }
+.ft-bar-sep { color: rgba(255,255,255,.28); }
+@media (max-width: 719px) {
+  /* No celular o separador "·" sumiria no fim de uma linha quebrada; cada
+     informação ganha a própria linha. */
+  .ft-bar { flex-direction: column; gap: 6px; }
+  .ft-bar-sep { display: none; }
 }
