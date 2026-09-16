@@ -7,13 +7,98 @@
     else document.addEventListener('DOMContentLoaded', fn);
   }
 
+  /* ---- Webhook do n8n ----------------------------------------------
+     Todo evento do site (clique em CTA, rolagem, envio de formulário,
+     consentimento, redirecionamento pro WhatsApp) passa por dl(). Daqui
+     ele sai em duas direções: o dataLayer, como sempre, e o webhook.
+
+     O que vai junto: qual botão foi clicado (o data-cta de cada link),
+     a página, a origem da visita (UTM guardada na sessão), o referrer e
+     um id de sessão, para dar pra juntar todos os cliques de uma mesma
+     visita.
+
+     Trocar de endereço é trocar esta linha. */
+  var WEBHOOK_URL = 'https://n8n-n8n-start.dnjlb7.easypanel.host/webhook/prime-cortinas';
+
+  var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
+
+  // Quem recusou os cookies na barra não é rastreado. Quem ainda não
+  // respondeu é, seguindo o que o site já fazia com o dataLayer desde
+  // sempre — se a exigência for consentimento explícito, basta trocar o
+  // teste por (escolha !== 'allow').
+  function rastreioPermitido() {
+    try { return localStorage.getItem('prime_cookie_consent') !== 'deny'; } catch (e) { return true; }
+  }
+
+  // Id de sessão: só serve para amarrar os eventos de uma mesma visita.
+  // Morre quando a aba fecha e não identifica ninguém.
+  function sessaoId() {
+    try {
+      var id = sessionStorage.getItem('prime_sid');
+      if (!id) {
+        id = Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8);
+        sessionStorage.setItem('prime_sid', id);
+      }
+      return id;
+    } catch (e) { return ''; }
+  }
+
+  function enviarWebhook(o) {
+    if (!WEBHOOK_URL || !rastreioPermitido()) return;
+    try {
+      var utm = {};
+      try { utm = JSON.parse(sessionStorage.getItem('prime_utm') || '{}'); } catch (e) {}
+
+      var dados = {
+        evento: o.event || '',
+        cta: o.cta_section || o.destination || '',
+        pagina: location.pathname,
+        url: location.href,
+        titulo: document.title,
+        referrer: document.referrer || '',
+        sessao: sessaoId(),
+        quando: new Date().toISOString(),
+        tela: (window.screen ? screen.width + 'x' + screen.height : ''),
+        idioma: navigator.language || '',
+        agente: navigator.userAgent || ''
+      };
+      UTM_KEYS.forEach(function (k) { dados[k] = utm[k] || ''; });
+      // Repassa qualquer campo extra do evento (consent, destination...)
+      Object.keys(o).forEach(function (k) { if (!(k in dados)) dados[k] = o[k]; });
+
+      // Os campos principais vão TAMBÉM na query. No n8n eles chegam
+      // prontos em {{$json.query}}, sem precisar tratar o corpo.
+      var qs = ['evento', 'cta', 'pagina', 'sessao', 'utm_source', 'utm_medium', 'utm_campaign']
+        .filter(function (k) { return dados[k]; })
+        .map(function (k) { return k + '=' + encodeURIComponent(dados[k]); })
+        .join('&');
+      var url = WEBHOOK_URL + (WEBHOOK_URL.indexOf('?') > -1 ? '&' : '?') + qs;
+      var corpo = JSON.stringify(dados);
+
+      // text/plain de propósito, e não application/json: o tipo JSON
+      // dispara a checagem de CORS (uma requisição OPTIONS antes), que o
+      // sendBeacon não sabe fazer — o envio morreria calado. Em
+      // text/plain a requisição sai direto. O corpo continua sendo JSON;
+      // no n8n, se ele não vier já convertido, é só um JSON.parse.
+      var tipo = { type: 'text/plain;charset=UTF-8' };
+      if (navigator.sendBeacon && navigator.sendBeacon(url, new Blob([corpo], tipo))) return;
+      // Reserva: keepalive segura a requisição mesmo com a página saindo
+      // para o WhatsApp. O erro é engolido de propósito — rastreio nunca
+      // pode quebrar o site.
+      if (window.fetch) {
+        fetch(url, { method: 'POST', mode: 'no-cors', keepalive: true, body: corpo,
+                     headers: { 'Content-Type': 'text/plain;charset=UTF-8' } })['catch'](function () {});
+      }
+    } catch (e) {}
+  }
+
   function dl(o) {
     window.dataLayer = window.dataLayer || [];
     window.dataLayer.push(o);
+    enviarWebhook(o);
   }
 
   ready(function () {
-    var UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content', 'utm_term'];
     var qp = new URLSearchParams(location.search);
 
     // ---- Captura e propagação de UTM para os CTAs de WhatsApp ----
@@ -30,6 +115,11 @@
     var utmQS = UTM_KEYS.filter(function (k) { return utmStore[k]; })
       .map(function (k) { return k + '=' + encodeURIComponent(utmStore[k]); })
       .join('&');
+
+    // A visita em si: o page_view do <head> é empurrado direto pro
+    // dataLayer, antes deste arquivo rodar, então o webhook não o veria.
+    // Aqui ele sai depois da UTM da visita já estar guardada acima.
+    enviarWebhook({ event: 'pageview' });
 
     var waLinks = Array.prototype.slice.call(document.querySelectorAll('a[data-wa]'));
     waLinks.forEach(function (a) {

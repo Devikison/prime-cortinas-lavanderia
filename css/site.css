@@ -814,10 +814,51 @@ summary::-webkit-details-marker { display: none; }
    grid-column, não mexendo na ordem do HTML — assim, quando o grid
    colapsa numa coluna só (abaixo de 860px), o vídeo continua entrando
    primeiro, em cima dos cards, como sempre foi no celular. */
+/* O quadro do vídeo: 4:5 no celular (o mesmo recorte de sempre) e, no
+   desktop, altura livre para acompanhar a coluna dos cards. */
+.pc-video-box { position: relative; aspect-ratio: 4/5; background: #F7F6F3; border-radius: 2px; overflow: hidden; }
+
+/* Espelho da seção "Cinco passos" no desktop: os cards ocupam a coluna da
+   esquerda, onde a leitura começa, e o vídeo a da direita, do topo do
+   primeiro card até a base do último.
+   São três itens em duas linhas: o título sozinho em cima (linha 1) e, na
+   linha 2, os cards à esquerda e o vídeo à direita. É o título estar fora
+   da linha do vídeo que faz as duas bordas baterem com as dos cards. */
 @media (min-width: 860px) {
-  .pc-stack-grid-flip { grid-template-columns: minmax(360px,1.5fr) minmax(260px,1fr); }
-  .pc-stack-grid-flip > .pc-stack-main { grid-column: 1; grid-row: 1; }
-  .pc-stack-grid-flip > .pc-stack-aside { grid-column: 2; grid-row: 1; }
+  .pc-stack-grid-flip {
+    grid-template-columns: minmax(360px,1.5fr) minmax(260px,1fr);
+    grid-template-rows: auto 1fr;
+    row-gap: clamp(20px,3vw,30px);
+    column-gap: clamp(40px,6vw,72px);
+  }
+  .pc-stack-grid-flip > .pc-stack-head { grid-column: 1; grid-row: 1; }
+  .pc-stack-grid-flip > .pc-stack-main { grid-column: 1; grid-row: 2; }
+  /* O botão desce para a própria linha: se ficasse na linha 2, junto
+     com os cards, ele entraria na conta da altura e o vídeo passaria
+     do último card. */
+  .pc-stack-grid-flip > .pc-stack-cta { grid-column: 1; grid-row: 3; }
+  .pc-stack-grid-flip > .pc-stack-aside {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;        /* solta o teto de 380px: o vídeo ocupa a coluna */
+    align-self: stretch; /* e a altura inteira da linha dos cards */
+    /* min-height:0 desarma a altura mínima automática do item de grid.
+       Sem ela, em algumas larguras o vídeo empurrava a própria linha
+       para mais alto que os cards e a base passava do último. */
+    min-height: 0;
+    /* Deixa de ser sticky: o sticky existia para a foto ficar parada
+       enquanto os cards se juntavam ao lado, e agora o vídeo tem a altura
+       da pilha inteira — não há o que grudar. */
+    /* A .pc-stack termina com um ::after de respiro (a folga que os cards
+       sticky precisam para correr e empilhar). Sem descontar essa mesma
+       medida aqui, o vídeo passaria do último card e desceria junto com o
+       vazio. Os dois usam o clamp idêntico, então as bordas batem. */
+    margin-bottom: clamp(80px,22vh,200px);
+  }
+  /* border-box: a moldura tem 14px de padding, que sem isso somariam por
+     FORA dos 100% e a borda passaria 28px do último card. */
+  .pc-stack-grid-flip .pc-frame { height: 100%; box-sizing: border-box; }
+  .pc-stack-grid-flip .pc-video-box { aspect-ratio: auto; height: 100%; }
 }
 .pc-stack-aside { width: min(100%, 380px); margin: 0 auto; }
 @media (min-width: 860px) {
