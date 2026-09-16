@@ -1623,12 +1623,15 @@ summary::-webkit-details-marker { display: none; }
   justify-items: center;
 }
 @media (min-width: 720px) {
-  /* Três colunas alinhadas à esquerda: é assim que se lê uma ficha de
-     contato. O centralizado só vale enquanto é uma pilha no celular. */
-  .ft-grid { grid-template-columns: repeat(3, 1fr); gap: clamp(28px,4vw,56px); text-align: left; justify-items: start; }
+  /* Três colunas, cada uma com o conteúdo centralizado no próprio terço.
+     Alinhadas à esquerda ficavam encostadas num lado só: como os textos
+     têm larguras bem diferentes, sobrava um vazio grande à direita e o
+     bloco inteiro puxava para a esquerda, desencontrado do botão e do
+     resto do rodapé, que são centralizados. Centralizadas, a coluna do
+     meio cai em cima do eixo da página e as três ficam simétricas. */
+  .ft-grid { grid-template-columns: repeat(3, 1fr); gap: clamp(28px,4vw,56px); }
 }
 .ft-col { display: flex; flex-direction: column; align-items: center; gap: 10px; }
-@media (min-width: 720px) { .ft-col { align-items: flex-start; } }
 .ft-col-title { font-size: .7rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--gold); margin: 0 0 4px; }
 .ft-text { font-size: .9rem; line-height: 1.75; color: rgba(255,255,255,.64); margin: 0; }
 .ft-link { font-size: .9rem; line-height: 1.75; color: rgba(255,255,255,.78); text-decoration: none; transition: color var(--dur-med) var(--ease-lux); }
