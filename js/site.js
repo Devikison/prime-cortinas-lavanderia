@@ -128,65 +128,168 @@
       }
     }
 
-    // ---- Carrossel "coverflow" — card central em foco, vizinhos
-    // desfocados nas laterais, transição lenta via setas ou arraste
-    // (mouse ou dedo). ----
-    function initCoverflow(stageId, slideClass, prevId, nextId) {
+    // ---- Carrossel "Um retrato do nosso cuidado" — gira sozinho, devagar
+    // e sem parar. Segurar o clique (ou o dedo) e arrastar leva os cards
+    // junto, para frente ou para trás; ao soltar, o arremesso desacelera
+    // e a roda volta a girar sozinha. As setas seguem valendo, empurrando
+    // um card por clique.
+    //
+    // A posição é um número quebrado ("2.37" = entre o terceiro e o quarto
+    // card), avançada quadro a quadro pelo requestAnimationFrame. É por
+    // isso que a transição de CSS saiu do .pf-slide: as duas mexeriam na
+    // mesma propriedade ao mesmo tempo e o movimento ficaria borrachudo,
+    // sempre correndo atrás do valor anterior. ----
+    function initLoopCarousel(stageId, slideClass, prevId, nextId) {
       var stage = document.getElementById(stageId);
       if (!stage) return;
       var slides = Array.prototype.slice.call(stage.querySelectorAll('.' + slideClass));
       var n = slides.length;
       if (!n) return;
-      var current = 0;
 
-      function wrapDelta(d) {
-        d = ((d % n) + n) % n;
-        if (d > n / 2) d -= n;
-        return d;
-      }
+      // Cards por segundo. 0.11 dá um card a cada ~9s: é o "slow motion".
+      var VEL_BASE = 0.11;
+      // Teto do arremesso, pra um empurrão forte não rodar a pilha inteira.
+      var FLING_MAX = 3.2;
+
+      var calmo = window.matchMedia('(prefers-reduced-motion: reduce)');
+      var pos = 0;      // posição contínua, em cards
+      var extra = 0;    // deslocamento pendente das setas
+      var fling = 0;    // sobra de velocidade do arremesso, decai sozinha
+      var arrastando = false;
+      var naTela = true;
+      var x0 = 0, pos0 = 0, xAnt = 0, tAnt = 0, velArrasto = 0, passo = 1;
+      var raf = 0, tUlt = 0;
+
+      function wrapDelta(d) { d = ((d % n) + n) % n; if (d > n / 2) d -= n; return d; }
+
       function render() {
         slides.forEach(function (slide, i) {
-          var delta = wrapDelta(i - current);
+          var delta = wrapDelta(i - pos);
           var ad = Math.abs(delta);
-          var scale = ad === 0 ? 1 : ad === 1 ? 0.78 : 0.62;
-          var op = ad === 0 ? 1 : ad === 1 ? 0.55 : 0;
-          var blur = ad === 0 ? 0 : ad === 1 ? 2 : 5;
-          slide.style.setProperty('--delta', delta);
-          slide.style.setProperty('--scale', scale);
-          slide.style.setProperty('--op', op);
-          slide.style.setProperty('--blur', blur + 'px');
-          slide.style.zIndex = 10 - ad;
-          slide.style.pointerEvents = ad === 0 ? 'auto' : 'none';
-          slide.setAttribute('aria-hidden', ad === 0 ? 'false' : 'true');
+          // Mesmas marcas do carrossel anterior (escala 1 / .78 / .62 e
+          // opacidade 1 / .55 / 0 nas posições 0, 1 e 2), só que agora
+          // contínuas, valendo também para o meio do caminho.
+          var escala = ad <= 1 ? 1 - 0.22 * ad : Math.max(0.62, 0.78 - 0.16 * (ad - 1));
+          var op = ad <= 1 ? 1 - 0.45 * ad : Math.max(0, 0.55 - 0.55 * (ad - 1));
+          var borrao = ad <= 1 ? 2 * ad : Math.min(5, 2 + 3 * (ad - 1));
+          slide.style.setProperty('--delta', delta.toFixed(4));
+          slide.style.setProperty('--scale', escala.toFixed(4));
+          slide.style.setProperty('--op', op.toFixed(3));
+          // Arredondado no 1px de propósito: o blur é o único efeito caro
+          // aqui, e mudá-lo a cada quadro obrigaria o navegador a
+          // redesenhar o card inteiro 60x por segundo. Em degraus de 1px
+          // ele redesenha meia dúzia de vezes por card, e a olho nu o
+          // resultado é o mesmo.
+          slide.style.setProperty('--blur', Math.round(borrao) + 'px');
+          slide.style.zIndex = String(Math.round(50 - ad * 10));
+          var focado = ad < 0.5;
+          slide.style.pointerEvents = focado ? 'auto' : 'none';
+          slide.setAttribute('aria-hidden', focado ? 'false' : 'true');
         });
       }
+
+      // Só mantém o loop de quadros vivo enquanto há o que animar: fora
+      // da tela, em outra aba ou com "reduzir movimento" ligado e nada
+      // acontecendo, ele para de vez em vez de rodar à toa.
+      function precisaAnimar() {
+        return arrastando || extra !== 0 || fling !== 0 || (naTela && !calmo.matches);
+      }
+      function liga() { if (!raf && precisaAnimar()) { tUlt = 0; raf = requestAnimationFrame(quadro); } }
+      function desliga() { if (raf) { cancelAnimationFrame(raf); raf = 0; } }
+
+      function quadro(t) {
+        // Teto no dt: voltando de outra aba o salto seria de segundos, e a
+        // roda daria um pulo em vez de continuar de onde parou.
+        var dt = tUlt ? Math.min(0.05, (t - tUlt) / 1000) : 0;
+        tUlt = t;
+        if (!arrastando) {
+          if (naTela && !calmo.matches) pos += VEL_BASE * dt;
+          if (fling) {
+            pos += fling * dt;
+            fling *= Math.exp(-dt * 3.2);
+            if (Math.abs(fling) < 0.01) fling = 0;
+          }
+          if (extra) {
+            var avanco = extra * Math.min(1, dt * 5);
+            pos += avanco;
+            extra -= avanco;
+            if (Math.abs(extra) < 0.001) extra = 0;
+          }
+        }
+        pos = ((pos % n) + n) % n;
+        render();
+        raf = precisaAnimar() ? requestAnimationFrame(quadro) : 0;
+      }
+
       var prevBtn = document.getElementById(prevId);
       var nextBtn = document.getElementById(nextId);
-      if (prevBtn) prevBtn.addEventListener('click', function () { current = (current - 1 + n) % n; render(); });
-      if (nextBtn) nextBtn.addEventListener('click', function () { current = (current + 1) % n; render(); });
+      function empurra(d) { extra += d; fling = 0; liga(); }
+      if (prevBtn) prevBtn.addEventListener('click', function () { empurra(-1); });
+      if (nextBtn) nextBtn.addEventListener('click', function () { empurra(1); });
 
-      // Arraste com mouse ou dedo (pointer events cobrem os dois)
-      var dragging = false;
-      var startX = 0;
-      stage.addEventListener('pointerdown', function (e) { dragging = true; startX = e.clientX; stage.setPointerCapture(e.pointerId); });
-      stage.addEventListener('pointerup', function (e) {
-        if (!dragging) return;
-        dragging = false;
-        var dx = e.clientX - startX;
-        if (Math.abs(dx) > 40) {
-          current = dx < 0 ? (current + 1) % n : (current - 1 + n) % n;
-          render();
+      // Arraste com mouse ou dedo — pointer events cobrem os dois. O
+      // .pf-wrap tem touch-action:pan-y, então o dedo na horizontal vem
+      // pra cá e na vertical continua rolando a página.
+      // Trava o drag-and-drop nativo da imagem: sem ela o navegador
+      // sequestra o gesto e manda um pointercancel logo no primeiro
+      // milímetro de arraste (o CSS já cobre isso com -webkit-user-drag,
+      // isto aqui é para quem não o entende).
+      stage.addEventListener('dragstart', function (e) { e.preventDefault(); });
+      stage.addEventListener('pointerdown', function (e) {
+        arrastando = true;
+        fling = 0;
+        extra = 0;
+        x0 = xAnt = e.clientX;
+        pos0 = pos;
+        tAnt = e.timeStamp;
+        velArrasto = 0;
+        // Quanto de tela vale um card: o .pf-slide anda 62% da largura
+        // dele por card (ver o transform no CSS). Medido no clique porque
+        // a largura muda com o tamanho da janela.
+        var largura = slides[0].offsetWidth || stage.clientWidth;
+        passo = Math.max(60, largura * 0.62);
+        try { stage.setPointerCapture(e.pointerId); } catch (err) {}
+        liga();
+      });
+      stage.addEventListener('pointermove', function (e) {
+        if (!arrastando) return;
+        pos = pos0 - (e.clientX - x0) / passo;
+        var dt = (e.timeStamp - tAnt) / 1000;
+        // Amostra a velocidade em fatias de pelo menos 4ms: em intervalos
+        // menores o dt é ruído e o arremesso sairia com valores absurdos.
+        if (dt > 0.004) {
+          velArrasto = -((e.clientX - xAnt) / passo) / dt;
+          xAnt = e.clientX;
+          tAnt = e.timeStamp;
         }
       });
-      stage.addEventListener('pointercancel', function () { dragging = false; });
+      function solta() {
+        if (!arrastando) return;
+        arrastando = false;
+        fling = Math.max(-FLING_MAX, Math.min(FLING_MAX, velArrasto));
+        liga();
+      }
+      stage.addEventListener('pointerup', solta);
+      stage.addEventListener('pointercancel', solta);
+      stage.addEventListener('lostpointercapture', solta);
+
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          naTela = entries[0].isIntersecting;
+          if (naTela) liga(); else desliga();
+        }, { threshold: 0.01 }).observe(stage);
+      }
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) desliga(); else liga();
+      });
 
       render();
+      liga();
     }
-    // "Um retrato do nosso cuidado, do trilho ao trilho" — único
-    // carrossel "coverflow" da página (a antiga seção de Portfólio foi
-    // absorvida por ela). A classe .pf-slide é buscada só dentro do
-    // próprio #included-stage.
-    initCoverflow('included-stage', 'pf-slide', 'included-prev', 'included-next');
+    // "Um retrato do nosso cuidado, do trilho ao trilho" — único carrossel
+    // da página (a antiga seção de Portfólio foi absorvida por ela). A
+    // classe .pf-slide é buscada só dentro do próprio #included-stage.
+    initLoopCarousel('included-stage', 'pf-slide', 'included-prev', 'included-next');
 
     // ---- Vídeo do quadro em "Cinco passos..." — toca sozinho e sem som,
     // como uma foto que se move, e só enquanto está na tela (não gasta
